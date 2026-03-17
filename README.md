@@ -1,5 +1,15 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Basa Lagbe
+
+Home rent service: list houses, filter by location and category (Family/Bachelor/Both), view listings on a map and open details in a sidebar.
+
+### Environment
+
+Copy `.env.local.example` to `.env.local` and set your Google Maps API key:
+
+- `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` – required for the map. Get a key at [Google Cloud Console](https://console.cloud.google.com/google/maps-apis).
+
 ## Getting Started
 
 First, run the development server:
