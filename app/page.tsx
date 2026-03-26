@@ -31,7 +31,7 @@ function setFavoritesStorage(ids: Set<string>) {
 function HomeFallback() {
   return (
     <main className="flex h-[calc(100vh-5rem)] flex-col">
-      <div className="flex flex-1 items-center justify-center text-[var(--foreground)]/70">
+      <div className="flex flex-1 items-center justify-center text-(--foreground)/70">
         Loading…
       </div>
     </main>
@@ -84,7 +84,12 @@ function HomeContent() {
   )
 
   const filteredListings = useMemo(() => {
-    let result = listings
+    /* Expiry is intentionally evaluated when listings or filters change (not a pure snapshot of time). */
+    const nowMs = +new Date()
+    let result = listings.filter((l) => new Date(l.expiresAt).getTime() > nowMs)
+    result = result.filter(
+      (l) => !l.publicationStatus || l.publicationStatus === 'published'
+    )
 
     if (category !== 'all') {
       result = result.filter((l) => l.category === category || l.category === 'both')
@@ -171,8 +176,8 @@ function HomeContent() {
         {selectedListing && (
           <div className="absolute left-0 top-0 z-10 h-full w-full max-w-sm shrink-0 md:relative md:z-0">
             <ListingDetailSidebar
-                listing={selectedListing}
-                onClose={handleCloseSidebar}
+              listing={selectedListing}
+              onClose={handleCloseSidebar}
               onShare={handleShare}
               isFavorite={favorites.has(selectedListing.id)}
               onToggleFavorite={handleToggleFavorite}

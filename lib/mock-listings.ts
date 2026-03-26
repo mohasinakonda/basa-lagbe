@@ -21,6 +21,8 @@ export const MOCK_LISTINGS: Listing[] = [
     photos: [photo(101), photo(102), photo(103), photo(104)],
     contact: { phone: '+880 1712-345678', email: 'dhanmondi.rent@example.com' },
     amenities: ['Parking', 'Generator', 'Lift', 'Security'],
+    expiresAt: '2030-12-31T23:59:59Z',
+    publicationStatus: 'published' as const,
     createdAt: '2025-01-15T10:00:00Z',
   },
   {
@@ -39,6 +41,8 @@ export const MOCK_LISTINGS: Listing[] = [
     photos: [photo(201), photo(202), photo(203)],
     contact: { phone: '+880 1811-223344', email: 'gulshan.bachelor@example.com' },
     amenities: ['WiFi', 'Generator', 'Security'],
+    expiresAt: '2030-12-31T23:59:59Z',
+    publicationStatus: 'published' as const,
     createdAt: '2025-02-01T09:00:00Z',
   },
   {
@@ -57,6 +61,8 @@ export const MOCK_LISTINGS: Listing[] = [
     photos: [photo(301), photo(302), photo(303), photo(304), photo(305)],
     contact: { phone: '+880 1911-334455', email: 'lakeview.rent@example.com' },
     amenities: ['Parking', 'Generator', 'Lift', 'Security', 'Garden'],
+    expiresAt: '2030-12-31T23:59:59Z',
+    publicationStatus: 'published' as const,
     createdAt: '2025-01-20T14:00:00Z',
   },
   {
@@ -75,6 +81,8 @@ export const MOCK_LISTINGS: Listing[] = [
     photos: [photo(401), photo(402), photo(403)],
     contact: { phone: '+880 1612-445566', email: 'mohammadpur.flat@example.com' },
     amenities: ['Parking', 'Generator', 'Security'],
+    expiresAt: '2030-12-31T23:59:59Z',
+    publicationStatus: 'published' as const,
     createdAt: '2025-02-10T11:00:00Z',
   },
   {
@@ -93,6 +101,8 @@ export const MOCK_LISTINGS: Listing[] = [
     photos: [photo(501), photo(502)],
     contact: { phone: '+880 1700-556677', email: 'banani.studio@example.com' },
     amenities: ['WiFi', 'Generator', 'Lift', 'Security'],
+    expiresAt: '2030-12-31T23:59:59Z',
+    publicationStatus: 'published' as const,
     createdAt: '2025-03-01T08:00:00Z',
   },
   {
@@ -111,6 +121,8 @@ export const MOCK_LISTINGS: Listing[] = [
     photos: [photo(601), photo(602), photo(603), photo(604)],
     contact: { phone: '+880 1555-667788', email: 'baridhara.house@example.com' },
     amenities: ['Parking', 'Generator', 'Security', 'Garden', 'Servant Quarter'],
+    expiresAt: '2030-12-31T23:59:59Z',
+    publicationStatus: 'published' as const,
     createdAt: '2025-01-05T12:00:00Z',
   },
   {
@@ -129,6 +141,8 @@ export const MOCK_LISTINGS: Listing[] = [
     photos: [photo(701), photo(702), photo(703)],
     contact: { phone: '+880 1888-778899', email: 'mirpur.rent@example.com' },
     amenities: ['Parking', 'Generator', 'Security'],
+    expiresAt: '2030-12-31T23:59:59Z',
+    publicationStatus: 'published' as const,
     createdAt: '2025-02-15T16:00:00Z',
   },
   {
@@ -147,6 +161,8 @@ export const MOCK_LISTINGS: Listing[] = [
     photos: [photo(801), photo(802)],
     contact: { phone: '+880 1722-889900', email: 'shyamoli.rent@example.com' },
     amenities: ['Generator', 'Security'],
+    expiresAt: '2030-12-31T23:59:59Z',
+    publicationStatus: 'published' as const,
     createdAt: '2025-03-05T07:00:00Z',
   },
 ]

@@ -3,7 +3,7 @@
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api'
 import { MarkerClusterer } from '@googlemaps/markerclusterer'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import type { Listing } from '@/types/listing'
+import type { Listing, ListingCategory } from '@/types/listing'
 
 const defaultCenter = {
   lat: 24.744958651896532,
@@ -87,13 +87,40 @@ function formatPrice(listing: Listing): string {
   return String(n)
 }
 
+/** Pill colors per category (unselected fill, selected fill). */
+const PILL_COLORS: Record<
+  ListingCategory,
+  { fill: string; stroke: string; selectedFill: string; selectedStroke: string }
+> = {
+  bachelor: {
+    fill: '#fef3c7',
+    stroke: '#f59e0b',
+    selectedFill: '#d97706',
+    selectedStroke: '#b45309',
+  },
+  family: {
+    fill: '#dbeafe',
+    stroke: '#3b82f6',
+    selectedFill: '#1d4ed8',
+    selectedStroke: '#1e40af',
+  },
+  both: {
+    fill: '#d1fae5',
+    stroke: '#10b981',
+    selectedFill: '#059669',
+    selectedStroke: '#047857',
+  },
+}
+
 /** Build SVG data URL for a pill-shaped marker with price. */
 function markerIconUrl(
   label: string,
-  selected: boolean
+  selected: boolean,
+  category: ListingCategory
 ): string {
-  const fill = selected ? '#1e40af' : '#ffffff'
-  const stroke = selected ? '#1e3a8a' : '#e5e7eb'
+  const colors = PILL_COLORS[category]
+  const fill = selected ? colors.selectedFill : colors.fill
+  const stroke = selected ? colors.selectedStroke : colors.stroke
   const textColor = selected ? '#ffffff' : '#1f2937'
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="72" height="32" viewBox="0 0 72 32">
@@ -144,7 +171,7 @@ export const Map = ({ listings, selectedListingId, onSelectListing }: MapProps) 
     const bounds = new google.maps.LatLngBounds()
     listings.forEach((l) => bounds.extend({ lat: l.lat, lng: l.lng }))
     map.fitBounds(bounds)
-  }, [listings.length])
+  }, [listings])
 
   const onUnmount = useCallback(() => {
     setMapInstance(null)
@@ -171,10 +198,11 @@ export const Map = ({ listings, selectedListingId, onSelectListing }: MapProps) 
       const label = `${listing.currency} ${formatPrice(listing)}`
       const marker = new google.maps.Marker({
         position: { lat: listing.lat, lng: listing.lng },
+
         map,
         icon: {
-          url: markerIconUrl(label, selectedListingId === listing.id),
-          scaledSize: new google.maps.Size(72, 32),
+          url: markerIconUrl(label, selectedListingId === listing.id, listing.category),
+          scaledSize: new google.maps.Size(72, 40),
           anchor: new google.maps.Point(36, 32),
         },
         title: listing.title,
@@ -189,7 +217,7 @@ export const Map = ({ listings, selectedListingId, onSelectListing }: MapProps) 
       map,
       markers,
       renderer: {
-        render: (cluster, _stats, _map) => {
+        render: (cluster) => {
           const count = cluster.count
           const position = cluster.position
           const color = '#1e40af'
@@ -238,15 +266,14 @@ export const Map = ({ listings, selectedListingId, onSelectListing }: MapProps) 
       onUnmount={onUnmount}
       options={{
         streetViewControl: false,
-        fullscreenControl: true,
-        zoomControl: true,
-        mapTypeControl: true,
-        scaleControl: false,
-        rotateControl: false,
-        disableDefaultUI: false,
+        fullscreenControl: false,
+        zoomControl: false,
+        mapTypeControl: false,
+        disableDefaultUI: true,
         keyboardShortcuts: false,
         styles: MAP_STYLES,
-        gestureHandling: 'cooperative',
+        cameraControl: false,
+
       }}
     />
   )

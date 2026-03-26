@@ -1,5 +1,7 @@
 export type ListingCategory = 'family' | 'bachelor' | 'both'
 
+export type ListingPublicationStatus = 'draft' | 'published' | 'archived'
+
 export interface ListingContact {
   phone: string
   email: string
@@ -7,6 +9,9 @@ export interface ListingContact {
 
 export interface Listing {
   id: string
+  /** Set when loaded from API / DB */
+  ownerId?: string
+  publicationStatus?: ListingPublicationStatus
   title: string
   description: string
   category: ListingCategory
@@ -22,4 +27,6 @@ export interface Listing {
   contact: ListingContact
   amenities: string[]
   createdAt: string
+  /** ISO date — listing hidden from public map after this instant */
+  expiresAt: string
 }

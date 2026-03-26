@@ -54,6 +54,7 @@ export function FilterBar({
   userLocation,
   isLocating = false,
 }: FilterBarProps) {
+  void userLocation
   return (
     <div className="flex flex-wrap items-center gap-3 border-b border-[var(--foreground)]/10 bg-[var(--background)] px-4 py-3">
       {onShowOnlyFavoritesChange != null && (

@@ -1,6 +1,8 @@
 'use client'
 
+import Link from 'next/link'
 import React, { useEffect, useRef, useState } from 'react'
+import { useSupabaseUser } from '@/lib/hooks/use-supabase-user'
 import type { Listing } from '@/types/listing'
 
 export interface ListingDetailSidebarProps {
@@ -26,15 +28,71 @@ export function ListingDetailSidebar({
 }: ListingDetailSidebarProps) {
   const [photoIndex, setPhotoIndex] = useState(0)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const userId = useSupabaseUser()
+  const supabaseConfigured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL?.trim())
+
+  const [stayStart, setStayStart] = useState('')
+  const [stayEnd, setStayEnd] = useState('')
+  const [stayMessage, setStayMessage] = useState('')
+  const [bookingError, setBookingError] = useState<string | null>(null)
+  const [bookingOk, setBookingOk] = useState(false)
+  const [bookingSubmitting, setBookingSubmitting] = useState(false)
 
   useEffect(() => {
     if (listing) closeButtonRef.current?.focus()
   }, [listing])
 
+  useEffect(() => {
+    setBookingError(null)
+    setBookingOk(false)
+    setStayStart('')
+    setStayEnd('')
+    setStayMessage('')
+  }, [listing?.id])
+
   if (!listing) return null
 
   const photos = listing.photos.length > 0 ? listing.photos : ['https://picsum.photos/seed/placeholder/800/600']
   const currentPhoto = photos[photoIndex] ?? photos[0]
+  const expiresLabel = listing.expiresAt
+    ? new Date(listing.expiresAt).toLocaleDateString(undefined, {
+        dateStyle: 'medium',
+      })
+    : null
+
+  const canBookRemote =
+    supabaseConfigured && listing.ownerId != null && userId != null && userId !== listing.ownerId
+
+  const handleBooking = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setBookingError(null)
+    setBookingOk(false)
+    if (!stayStart || !stayEnd) {
+      setBookingError('Choose start and end dates.')
+      return
+    }
+    setBookingSubmitting(true)
+    try {
+      const res = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          listingId: listing.id,
+          requestedStart: stayStart,
+          requestedEnd: stayEnd,
+          message: stayMessage.trim() || undefined,
+        }),
+      })
+      const json = (await res.json().catch(() => ({}))) as { error?: string }
+      if (!res.ok) throw new Error(json.error ?? 'Could not send request')
+      setBookingOk(true)
+    } catch (err) {
+      setBookingError(err instanceof Error ? err.message : 'Booking failed')
+    } finally {
+      setBookingSubmitting(false)
+    }
+  }
 
   return (
     <aside
@@ -139,6 +197,11 @@ export function ListingDetailSidebar({
           </ul>
 
           <p className="text-sm text-[var(--foreground)]/90">{listing.address}</p>
+          {expiresLabel && (
+            <p className="text-xs text-[var(--foreground)]/60">
+              Listed until <span className="font-medium">{expiresLabel}</span>
+            </p>
+          )}
           <p className="text-sm leading-relaxed">{listing.description}</p>
 
           {listing.amenities.length > 0 && (
@@ -155,6 +218,84 @@ export function ListingDetailSidebar({
                 ))}
               </ul>
             </div>
+          )}
+
+          {supabaseConfigured && listing.ownerId != null && userId === listing.ownerId && (
+            <p className="rounded border border-(--foreground)/15 bg-(--foreground)/5 px-3 py-2 text-sm text-(--foreground)/80">
+              This is your listing. Manage it from the dashboard.
+            </p>
+          )}
+
+          {canBookRemote && (
+            <div className="rounded border border-(--foreground)/15 p-3">
+              <h3 className="text-sm font-medium mb-2">Request a stay</h3>
+              <p className="mb-3 text-xs text-(--foreground)/65">
+                The owner will confirm or decline your request.
+              </p>
+              {bookingOk ? (
+                <p className="text-sm text-green-700">Request sent. Check your dashboard for status.</p>
+              ) : (
+                <form className="flex flex-col gap-2" onSubmit={handleBooking}>
+                  <div className="grid grid-cols-2 gap-2">
+                    <label className="text-xs text-(--foreground)/70">
+                      Start
+                      <input
+                        type="date"
+                        required
+                        value={stayStart}
+                        onChange={(e) => setStayStart(e.target.value)}
+                        className="mt-0.5 w-full rounded border border-(--foreground)/20 bg-background px-2 py-1.5 text-sm"
+                      />
+                    </label>
+                    <label className="text-xs text-(--foreground)/70">
+                      End
+                      <input
+                        type="date"
+                        required
+                        value={stayEnd}
+                        onChange={(e) => setStayEnd(e.target.value)}
+                        className="mt-0.5 w-full rounded border border-(--foreground)/20 bg-background px-2 py-1.5 text-sm"
+                      />
+                    </label>
+                  </div>
+                  <label className="text-xs text-(--foreground)/70">
+                    Message (optional)
+                    <textarea
+                      value={stayMessage}
+                      onChange={(e) => setStayMessage(e.target.value)}
+                      rows={2}
+                      className="mt-0.5 w-full rounded border border-(--foreground)/20 bg-background px-2 py-1.5 text-sm"
+                      placeholder="Introduce yourself or ask a question"
+                    />
+                  </label>
+                  {bookingError && (
+                    <p className="text-xs text-red-600" role="alert">
+                      {bookingError}
+                    </p>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={bookingSubmitting || userId === undefined}
+                    className="rounded bg-(--foreground) px-3 py-2 text-sm font-medium text-(--background) hover:opacity-90 disabled:opacity-50"
+                  >
+                    {bookingSubmitting ? 'Sending…' : 'Send request'}
+                  </button>
+                </form>
+              )}
+            </div>
+          )}
+
+          {supabaseConfigured && listing.ownerId != null && userId === undefined && (
+            <p className="text-xs text-(--foreground)/60">Checking sign-in…</p>
+          )}
+
+          {supabaseConfigured && listing.ownerId != null && userId === null && (
+            <p className="text-sm text-(--foreground)/80">
+              <Link href="/auth/login" className="font-medium underline">
+                Sign in
+              </Link>{' '}
+              to request a stay for this listing.
+            </p>
           )}
 
           <div>

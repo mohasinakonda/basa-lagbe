@@ -1,25 +1,12 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { useListings } from '@/lib/listings-context'
-import { useSupabaseUser } from '@/lib/hooks/use-supabase-user'
+import { useParams, useRouter } from 'next/navigation'
+import React, { useEffect, useState } from 'react'
 import { LocationPickerMap } from '@/components/location-picker/LocationPickerMap'
-import type { ListingCategory } from '@/types/listing'
+import type { Listing, ListingCategory } from '@/types/listing'
 import { Input } from '@/components/UI/input'
 import { Label } from '@/components/UI/label'
-
-function defaultExpiryDate(): string {
-  const d = new Date()
-  d.setDate(d.getDate() + 30)
-  return d.toISOString().slice(0, 10)
-}
-
-function endOfDayIso(dateYmd: string): string {
-  const d = new Date(`${dateYmd}T23:59:59`)
-  return d.toISOString()
-}
 
 const CATEGORIES: { value: ListingCategory; label: string }[] = [
   { value: 'family', label: 'Family' },
@@ -29,12 +16,25 @@ const CATEGORIES: { value: ListingCategory; label: string }[] = [
 
 const AMENITY_OPTIONS = ['Parking', 'Generator', 'Lift', 'Security', 'WiFi', 'Garden', 'Servant Quarter']
 
-export default function ListYourHousePage() {
-  const router = useRouter()
-  const { addListing } = useListings()
-  const userId = useSupabaseUser()
-  const supabaseConfigured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL?.trim())
+function toDateInput(iso: string): string {
+  try {
+    return new Date(iso).toISOString().slice(0, 10)
+  } catch {
+    return new Date().toISOString().slice(0, 10)
+  }
+}
 
+function endOfDayIso(dateYmd: string): string {
+  return new Date(`${dateYmd}T23:59:59`).toISOString()
+}
+
+export default function EditListingPage() {
+  const router = useRouter()
+  const params = useParams()
+  const id = typeof params.id === 'string' ? params.id : ''
+
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [category, setCategory] = useState<ListingCategory>('both')
@@ -45,21 +45,58 @@ export default function ListYourHousePage() {
   const [bedrooms, setBedrooms] = useState('')
   const [bathrooms, setBathrooms] = useState('')
   const [areaSqFt, setAreaSqFt] = useState('')
-  const [photoUrls, setPhotoUrls] = useState([''])
+  const [photoUrls, setPhotoUrls] = useState<string[]>([''])
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [amenities, setAmenities] = useState<string[]>([])
-  const [expiresDate, setExpiresDate] = useState(defaultExpiryDate)
-  const [publishNow, setPublishNow] = useState(true)
-  const [submitError, setSubmitError] = useState<string | null>(null)
-  const [submitting, setSubmitting] = useState(false)
+  const [expiresDate, setExpiresDate] = useState('')
+  const [status, setStatus] = useState<Listing['publicationStatus']>('published')
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    if (!supabaseConfigured) return
-    if (userId === null) {
-      router.replace('/auth/login?next=/list-your-house')
+    if (!id) return
+    let cancelled = false
+    ;(async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const res = await fetch(`/api/listings/${id}`, { credentials: 'include' })
+        if (res.status === 401) {
+          router.replace('/auth/login?next=' + encodeURIComponent(`/dashboard/listings/${id}/edit`))
+          return
+        }
+        if (!res.ok) {
+          const j = (await res.json().catch(() => ({}))) as { error?: string }
+          throw new Error(j.error ?? 'Failed to load listing')
+        }
+        const j = (await res.json()) as { listing: Listing }
+        if (cancelled) return
+        const l = j.listing
+        setTitle(l.title)
+        setDescription(l.description)
+        setCategory(l.category)
+        setLocation({ lat: l.lat, lng: l.lng })
+        setAddress(l.address)
+        setPrice(String(l.price))
+        setBedrooms(String(l.bedrooms))
+        setBathrooms(String(l.bathrooms))
+        setAreaSqFt(String(l.areaSqFt))
+        setPhotoUrls(l.photos.length ? l.photos : [''])
+        setPhone(l.contact.phone)
+        setEmail(l.contact.email)
+        setAmenities(l.amenities)
+        setExpiresDate(toDateInput(l.expiresAt))
+        setStatus(l.publicationStatus ?? 'published')
+      } catch (e) {
+        if (!cancelled) setError(e instanceof Error ? e.message : 'Error')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    })()
+    return () => {
+      cancelled = true
     }
-  }, [supabaseConfigured, userId, router])
+  }, [id, router])
 
   const addPhotoField = () => setPhotoUrls((prev) => [...prev, ''])
   const removePhotoField = (i: number) =>
@@ -78,56 +115,72 @@ export default function ListYourHousePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setSubmitError(null)
-    if (supabaseConfigured && userId === undefined) return
-    if (supabaseConfigured && userId === null) {
-      router.push('/auth/login?next=/list-your-house')
-      return
-    }
     if (!location) {
-      setLocationError('Please set your property location on the map (click the map or use “Get my current location”).')
+      setLocationError('Please set location on the map.')
       return
     }
     setLocationError(null)
     const photos = photoUrls.map((u) => u.trim()).filter(Boolean)
-    if (photos.length === 0) photos.push('https://picsum.photos/seed/new/800/600')
+    if (photos.length === 0) photos.push('https://picsum.photos/seed/edit/800/600')
 
-    setSubmitting(true)
+    setSaving(true)
+    setError(null)
     try {
-      await addListing({
-        title: title.trim(),
-        description: description.trim(),
-        category,
-        address: address.trim() || `Lat ${location.lat.toFixed(5)}, Lng ${location.lng.toFixed(5)}`,
-        lat: location.lat,
-        lng: location.lng,
-        price: Number(price) || 0,
-        currency: 'BDT',
-        bedrooms: Number(bedrooms) || 0,
-        bathrooms: Number(bathrooms) || 0,
-        areaSqFt: Number(areaSqFt) || 0,
-        photos,
-        contact: { phone: phone.trim(), email: email.trim() },
-        amenities,
-        expiresAt: endOfDayIso(expiresDate),
-        publicationStatus: publishNow ? 'published' : 'draft',
+      const res = await fetch(`/api/listings/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          title: title.trim(),
+          description: description.trim(),
+          category,
+          lat: location.lat,
+          lng: location.lng,
+          address: address.trim(),
+          price: Number(price) || 0,
+          currency: 'BDT',
+          bedrooms: Number(bedrooms) || 0,
+          bathrooms: Number(bathrooms) || 0,
+          areaSqFt: Number(areaSqFt) || 0,
+          photos,
+          amenities,
+          contact: { phone: phone.trim(), email: email.trim() },
+          status,
+          expiresAt: endOfDayIso(expiresDate),
+        }),
       })
-      router.push('/')
-    } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : 'Failed to save listing')
+      const j = (await res.json().catch(() => ({}))) as { error?: string }
+      if (!res.ok) throw new Error(j.error ?? 'Save failed')
+      router.push('/dashboard')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Save failed')
     } finally {
-      setSubmitting(false)
+      setSaving(false)
     }
+  }
+
+  if (loading) {
+    return (
+      <main className="mx-auto max-w-2xl px-4 py-8">
+        <p className="text-(--foreground)/70">Loading listing…</p>
+      </main>
+    )
   }
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-8">
       <div className="mb-6 flex items-center gap-4">
-        <Link href="/" className="text-(--foreground)/80 hover:underline">
-          ← Back
+        <Link href="/dashboard" className="text-(--foreground)/80 hover:underline">
+          ← Dashboard
         </Link>
-        <h1 className="text-2xl font-semibold">List your house</h1>
+        <h1 className="text-2xl font-semibold">Edit listing</h1>
       </div>
+
+      {error && (
+        <p className="mb-4 text-sm text-red-600" role="alert">
+          {error}
+        </p>
+      )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         <div>
@@ -140,14 +193,12 @@ export default function ListYourHousePage() {
             required
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-
-            placeholder="e.g. Spacious 3BHK in Dhanmondi"
           />
         </div>
 
         <div>
           <Label htmlFor="description" required>
-            Description *
+            Description
           </Label>
           <textarea
             id="description"
@@ -156,17 +207,16 @@ export default function ListYourHousePage() {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className="w-full rounded border border-(--foreground)/20 bg-background px-3 py-2"
-            placeholder="Describe the property..."
           />
         </div>
 
         <div>
-          <Label required>Category </Label>
+          <Label required>Category</Label>
           <div className="flex gap-4">
             {CATEGORIES.map((opt) => (
               <label key={opt.value} className="flex items-center gap-2">
                 <input
-                  className='w-4 h-4 accent-foreground'
+                  className="h-4 w-4 accent-foreground"
                   type="radio"
                   name="category"
                   value={opt.value}
@@ -180,11 +230,7 @@ export default function ListYourHousePage() {
         </div>
 
         <div>
-          <LocationPickerMap
-            value={location}
-            onChange={handleLocationChange}
-            required
-          />
+          <LocationPickerMap value={location} onChange={handleLocationChange} required />
           {locationError && (
             <p className="mt-2 text-sm text-red-600" role="alert">
               {locationError}
@@ -193,31 +239,33 @@ export default function ListYourHousePage() {
         </div>
 
         <div>
-          <Label htmlFor="expiresDate" required>
+          <Label htmlFor="expiresEdit" required>
             Listing expires on
           </Label>
           <Input
-            id="expiresDate"
+            id="expiresEdit"
             type="date"
             required
             value={expiresDate}
             min={new Date().toISOString().slice(0, 10)}
             onChange={(e) => setExpiresDate(e.target.value)}
           />
-          <p className="mt-1 text-xs text-(--foreground)/60">
-            After this date the listing is hidden from the public map until you extend it.
-          </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <input
-            id="publishNow"
-            type="checkbox"
-            className="h-4 w-4 accent-foreground"
-            checked={publishNow}
-            onChange={(e) => setPublishNow(e.target.checked)}
-          />
-          <Label htmlFor="publishNow">Publish immediately (uncheck to save as draft)</Label>
+        <div>
+          <Label htmlFor="statusEdit">Visibility</Label>
+          <select
+            id="statusEdit"
+            value={status}
+            onChange={(e) =>
+              setStatus(e.target.value as Listing['publicationStatus'])
+            }
+            className="mt-1 w-full rounded border border-(--foreground)/20 bg-background px-3 py-2"
+          >
+            <option value="draft">Draft (only you)</option>
+            <option value="published">Published (on map)</option>
+            <option value="archived">Archived</option>
+          </select>
         </div>
 
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -232,7 +280,6 @@ export default function ListYourHousePage() {
               min={0}
               value={price}
               onChange={(e) => setPrice(e.target.value)}
-
             />
           </div>
           <div>
@@ -246,7 +293,6 @@ export default function ListYourHousePage() {
               min={0}
               value={bedrooms}
               onChange={(e) => setBedrooms(e.target.value)}
-
             />
           </div>
           <div>
@@ -260,7 +306,6 @@ export default function ListYourHousePage() {
               min={0}
               value={bathrooms}
               onChange={(e) => setBathrooms(e.target.value)}
-
             />
           </div>
           <div>
@@ -274,7 +319,6 @@ export default function ListYourHousePage() {
               min={0}
               value={areaSqFt}
               onChange={(e) => setAreaSqFt(e.target.value)}
-
             />
           </div>
         </div>
@@ -288,7 +332,6 @@ export default function ListYourHousePage() {
                   type="url"
                   value={url}
                   onChange={(e) => setPhotoUrl(i, e.target.value)}
-
                   placeholder="https://..."
                 />
                 <button
@@ -319,7 +362,7 @@ export default function ListYourHousePage() {
                   type="checkbox"
                   checked={amenities.includes(a)}
                   onChange={() => toggleAmenity(a)}
-                  className='w-4 h-4 accent-foreground'
+                  className="h-4 w-4 accent-foreground"
                 />
                 {a}
               </label>
@@ -338,8 +381,6 @@ export default function ListYourHousePage() {
               required
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-
-              placeholder="+880 1712-345678"
             />
           </div>
           <div>
@@ -352,28 +393,20 @@ export default function ListYourHousePage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-
-              placeholder="you@example.com"
             />
           </div>
         </div>
 
-        {submitError && (
-          <p className="text-sm text-red-600" role="alert">
-            {submitError}
-          </p>
-        )}
-
         <div className="flex gap-4">
           <button
             type="submit"
-            disabled={submitting || (supabaseConfigured && !userId)}
+            disabled={saving}
             className="rounded bg-foreground px-6 py-2 text-background hover:opacity-90 disabled:opacity-50"
           >
-            {submitting ? 'Saving…' : 'Submit listing'}
+            {saving ? 'Saving…' : 'Save changes'}
           </button>
           <Link
-            href="/"
+            href="/dashboard"
             className="rounded border border-(--foreground)/20 px-6 py-2 hover:bg-(--foreground)/10"
           >
             Cancel
