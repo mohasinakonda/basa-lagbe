@@ -5,6 +5,14 @@ export function isSupabaseConfigured(): boolean {
   )
 }
 
+/** Service role present — required for admin APIs and public impression logging. */
+export function isSupabaseServiceRoleConfigured(): boolean {
+  return Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() &&
+      process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()
+  )
+}
+
 export function isTwilioVerifyConfigured(): boolean {
   return Boolean(
     process.env.TWILIO_ACCOUNT_SID?.trim() &&

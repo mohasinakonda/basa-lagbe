@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 export const MainHeader = () => {
   const router = useRouter()
   const [email, setEmail] = useState<string | null>(null)
+  const [role, setRole] = useState<string | null>(null)
   const configured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL?.trim())
 
   useEffect(() => {
@@ -23,6 +24,22 @@ export const MainHeader = () => {
     })
     return () => subscription.unsubscribe()
   }, [configured])
+
+  useEffect(() => {
+    if (!email || !configured) {
+      queueMicrotask(() => setRole(null))
+      return
+    }
+    let cancelled = false
+    void fetch('/api/profile', { credentials: 'include' }).then(async (res) => {
+      if (!res.ok || cancelled) return
+      const j = (await res.json().catch(() => null)) as { profile?: { role?: string } } | null
+      if (!cancelled) setRole(j?.profile?.role ?? null)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [email, configured])
 
   const handleSignOut = async () => {
     if (!configured) return
@@ -53,6 +70,14 @@ export const MainHeader = () => {
             >
               Dashboard
             </Link>
+            {role === 'admin' && (
+              <Link
+                href="/admin"
+                className="text-sm font-medium text-(--foreground)/90 hover:underline"
+              >
+                Admin
+              </Link>
+            )}
             {email ? (
               <>
                 <Link

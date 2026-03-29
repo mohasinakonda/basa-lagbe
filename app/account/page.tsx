@@ -14,7 +14,7 @@ export default function AccountPage() {
 
   useEffect(() => {
     if (!configured) {
-      setChecked(true)
+      queueMicrotask(() => setChecked(true))
       return
     }
     const supabase = createClient()

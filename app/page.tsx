@@ -10,6 +10,8 @@ import { distanceKm } from '@/lib/geo'
 import type { Listing, ListingCategory } from '@/types/listing'
 
 const NEAR_ME_RADIUS_KM = 15
+const IMPRESSION_STORAGE_PREFIX = 'basa-lagbe-impression'
+const IMPRESSION_COOLDOWN_MS = 30 * 60 * 1000
 
 function getFavorites(): Set<string> {
   if (typeof window === 'undefined') return new Set()
@@ -42,6 +44,7 @@ function HomeContent() {
   const router = useRouter()
   const { listings } = useListings()
   const searchParams = useSearchParams()
+  const supabaseConfigured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL?.trim())
 
   const urlListingId = searchParams.get('listing')
   const [localSelectedId, setLocalSelectedId] = useState<string | null>(null)
@@ -114,6 +117,29 @@ function HomeContent() {
     () => (selectedListingId ? listings.find((l) => l.id === selectedListingId) ?? null : null),
     [listings, selectedListingId]
   )
+
+  useEffect(() => {
+    if (!supabaseConfigured || !selectedListing?.id) return
+    const key = `${IMPRESSION_STORAGE_PREFIX}:${selectedListing.id}`
+    const now = Date.now()
+    try {
+      const last = sessionStorage.getItem(key)
+      if (last != null && now - Number(last) < IMPRESSION_COOLDOWN_MS) return
+      sessionStorage.setItem(key, String(now))
+    } catch {
+      /* sessionStorage unavailable */
+    }
+
+    const path = `${window.location.pathname}${window.location.search}`
+    const referrer = document.referrer || null
+
+    void fetch(`/api/listings/${selectedListing.id}/impression`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ path, referrer }),
+    }).catch(() => {})
+  }, [selectedListing?.id, supabaseConfigured])
 
   const handleSelectListing = useCallback((id: string | null) => {
     setLocalSelectedId(id)

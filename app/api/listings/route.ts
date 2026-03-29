@@ -85,6 +85,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: profileError.message }, { status: 500 })
   }
 
+  const { data: moderation, error: modError } = await supabase
+    .from('profiles')
+    .select('listing_creation_blocked_until')
+    .eq('id', user.id)
+    .maybeSingle()
+  if (!modError && moderation?.listing_creation_blocked_until) {
+    const until = new Date(moderation.listing_creation_blocked_until as string).getTime()
+    if (until > Date.now()) {
+      return NextResponse.json(
+        { error: 'You cannot create new listings until the restriction on your account ends.' },
+        { status: 403 }
+      )
+    }
+  }
+
   let body: PostBody
   try {
     body = (await request.json()) as PostBody
