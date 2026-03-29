@@ -38,7 +38,13 @@ export const MainHeader = () => {
       <Link href="/" className="text-xl font-semibold hover:opacity-90">
         Basa Lagbe
       </Link>
-      <nav className="flex items-center gap-2 md:gap-4">
+      <nav className="flex flex-wrap items-center justify-end gap-2 md:gap-4">
+        <Link
+          href="/contact"
+          className="text-sm font-medium text-foreground hover:underline"
+        >
+          Contact
+        </Link>
         {configured && (
           <>
             <Link
@@ -49,6 +55,12 @@ export const MainHeader = () => {
             </Link>
             {email ? (
               <>
+                <Link
+                  href="/account"
+                  className="text-sm text-(--foreground)/80 hover:underline"
+                >
+                  Account
+                </Link>
                 <span className="hidden max-w-[140px] truncate text-xs text-(--foreground)/60 md:inline">
                   {email}
                 </span>

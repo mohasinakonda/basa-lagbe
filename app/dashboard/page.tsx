@@ -5,16 +5,6 @@ import { useRouter } from 'next/navigation'
 import React, { useCallback, useEffect, useState } from 'react'
 import type { Booking } from '@/types/booking'
 import type { Listing } from '@/types/listing'
-import { Input } from '@/components/UI/input'
-import { Label } from '@/components/UI/label'
-
-type ProfileRow = {
-  id: string
-  display_name: string | null
-  phone_e164: string | null
-  phone_verified_at: string | null
-}
-
 export default function DashboardPage() {
   const router = useRouter()
   const configured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL?.trim())
@@ -23,11 +13,6 @@ export default function DashboardPage() {
   const [myListings, setMyListings] = useState<Listing[]>([])
   const [asGuest, setAsGuest] = useState<Booking[]>([])
   const [asOwner, setAsOwner] = useState<Booking[]>([])
-  const [profile, setProfile] = useState<ProfileRow | null>(null)
-  const [phoneInput, setPhoneInput] = useState('')
-  const [codeInput, setCodeInput] = useState('')
-  const [phoneMsg, setPhoneMsg] = useState<string | null>(null)
-  const [phoneBusy, setPhoneBusy] = useState(false)
 
   const load = useCallback(async () => {
     if (!configured) {
@@ -36,12 +21,11 @@ export default function DashboardPage() {
     }
     setLoading(true)
     try {
-      const [mineRes, bookRes, profRes] = await Promise.all([
+      const [mineRes, bookRes] = await Promise.all([
         fetch('/api/listings/mine', { credentials: 'include' }),
         fetch('/api/bookings', { credentials: 'include' }),
-        fetch('/api/profile', { credentials: 'include' }),
       ])
-      if (mineRes.status === 401 || bookRes.status === 401 || profRes.status === 401) {
+      if (mineRes.status === 401 || bookRes.status === 401) {
         setUnauthorized(true)
         return
       }
@@ -53,11 +37,6 @@ export default function DashboardPage() {
         const j = (await bookRes.json()) as { asGuest?: Booking[]; asOwner?: Booking[] }
         setAsGuest(j.asGuest ?? [])
         setAsOwner(j.asOwner ?? [])
-      }
-      if (profRes.ok) {
-        const j = (await profRes.json()) as { profile?: ProfileRow }
-        setProfile(j.profile ?? null)
-        if (j.profile?.phone_e164) setPhoneInput(j.profile.phone_e164)
       }
     } finally {
       setLoading(false)
@@ -74,47 +53,6 @@ export default function DashboardPage() {
       router.replace('/auth/login?next=/dashboard')
     }
   }, [configured, loading, unauthorized, router])
-
-  const sendCode = async () => {
-    setPhoneMsg(null)
-    setPhoneBusy(true)
-    try {
-      const res = await fetch('/api/phone/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneE164: phoneInput }),
-      })
-      const j = (await res.json().catch(() => ({}))) as { error?: string }
-      if (!res.ok) throw new Error(j.error ?? 'Failed to send SMS')
-      setPhoneMsg('Check your phone for a verification code.')
-    } catch (e) {
-      setPhoneMsg(e instanceof Error ? e.message : 'Failed')
-    } finally {
-      setPhoneBusy(false)
-    }
-  }
-
-  const verifyCode = async () => {
-    setPhoneMsg(null)
-    setPhoneBusy(true)
-    try {
-      const res = await fetch('/api/phone/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ phoneE164: phoneInput, code: codeInput }),
-      })
-      const j = (await res.json().catch(() => ({}))) as { error?: string }
-      if (!res.ok) throw new Error(j.error ?? 'Verification failed')
-      setPhoneMsg('Phone verified.')
-      setCodeInput('')
-      await load()
-    } catch (e) {
-      setPhoneMsg(e instanceof Error ? e.message : 'Failed')
-    } finally {
-      setPhoneBusy(false)
-    }
-  }
 
   const respondBooking = async (id: string, action: 'confirm' | 'decline') => {
     const res = await fetch(`/api/bookings/${id}`, {
@@ -159,70 +97,25 @@ export default function DashboardPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10 space-y-10">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <Link href="/" className="text-sm text-(--foreground)/80 hover:underline">
-          ← Map
-        </Link>
+        <div className="flex flex-wrap gap-4 text-sm text-(--foreground)/80">
+          <Link href="/account" className="hover:underline">
+            Account settings
+          </Link>
+          <Link href="/" className="hover:underline">
+            ← Map
+          </Link>
+        </div>
       </div>
 
-      <section className="space-y-3 rounded border border-(--foreground)/15 p-4">
-        <h2 className="text-lg font-medium">Phone verification</h2>
-        {profile?.phone_verified_at ? (
-          <p className="text-sm text-green-800">
-            Verified: <span className="font-mono">{profile.phone_e164}</span>
-          </p>
-        ) : (
-          <>
-            <p className="text-sm text-(--foreground)/70">
-              Add your mobile number. We send a one-time code via SMS (Twilio Verify must be configured
-              on the server).
-            </p>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-              <div className="flex-1">
-                <Label htmlFor="phoneDash">Phone (E.164, e.g. +8801XXXXXXXXX)</Label>
-                <Input
-                  id="phoneDash"
-                  type="tel"
-                  value={phoneInput}
-                  onChange={(e) => setPhoneInput(e.target.value)}
-                  placeholder="+8801..."
-                />
-              </div>
-              <button
-                type="button"
-                disabled={phoneBusy}
-                onClick={sendCode}
-                className="rounded border border-(--foreground)/20 px-4 py-2 text-sm hover:bg-(--foreground)/10 disabled:opacity-50"
-              >
-                Send code
-              </button>
-            </div>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-              <div className="flex-1">
-                <Label htmlFor="codeDash">Code</Label>
-                <Input
-                  id="codeDash"
-                  type="text"
-                  inputMode="numeric"
-                  value={codeInput}
-                  onChange={(e) => setCodeInput(e.target.value)}
-                  placeholder="123456"
-                />
-              </div>
-              <button
-                type="button"
-                disabled={phoneBusy}
-                onClick={verifyCode}
-                className="rounded bg-foreground px-4 py-2 text-sm text-background hover:opacity-90 disabled:opacity-50"
-              >
-                Verify
-              </button>
-            </div>
-          </>
-        )}
-        {phoneMsg && <p className="text-sm text-(--foreground)/80">{phoneMsg}</p>}
-      </section>
+      <p className="text-sm text-(--foreground)/70">
+        Update your{' '}
+        <Link href="/account" className="underline">
+          display name and phone
+        </Link>{' '}
+        under Account.
+      </p>
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">
