@@ -149,12 +149,16 @@ export function LocationPickerMap({ value, onChange, required }: LocationPickerM
           options={{
             streetViewControl: false,
             fullscreenControl: false,
-            zoomControl: true,
-            mapTypeControl: true,
+            zoomControl: false,
+            mapTypeControl: false,
             scaleControl: false,
-            rotateControl: false,
+            rotateControl: true,
             disableDefaultUI: false,
             gestureHandling: 'cooperative',
+            keyboardShortcuts: false,
+            cameraControl: false,
+
+
           }}
         >
           <Marker

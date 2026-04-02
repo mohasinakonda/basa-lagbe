@@ -1,15 +1,22 @@
 'use client'
 
+import Link from 'next/link'
 import React, { useCallback, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Input } from '@/components/UI/input'
 import { Label } from '@/components/UI/label'
+import {
+  formatListingBlockRelease,
+  isListingCreationActiveBlocked,
+} from '@/lib/listing-moderation'
 
 type ProfileRow = {
   id: string
   display_name: string | null
   phone_e164: string | null
   phone_verified_at: string | null
+  listing_creation_blocked_until?: string | null
+  listing_creation_block_reason?: string | null
 }
 
 export function AccountSettingsPanel() {
@@ -128,8 +135,45 @@ export function AccountSettingsPanel() {
     return <p className="text-sm text-(--foreground)/70">Loading…</p>
   }
 
+  const blockUntil = profile?.listing_creation_blocked_until ?? null
+  const blockReason = profile?.listing_creation_block_reason ?? null
+  const listingBlockActive = Boolean(profile && blockUntil && isListingCreationActiveBlocked(blockUntil))
+
   return (
     <div className="space-y-8">
+      {listingBlockActive && blockUntil && (
+        <section
+          className="space-y-3 rounded-lg border border-amber-600/50 bg-amber-500/10 p-4 text-(--foreground)"
+          role="status"
+          aria-live="polite"
+        >
+          <h2 className="text-lg font-semibold text-amber-900 dark:text-amber-100">
+            Listing creation restricted
+          </h2>
+          <p className="text-sm text-(--foreground)/90">
+            An administrator has limited your ability to add new property listings. Other account
+            settings below are not affected.
+          </p>
+          {blockReason?.trim() ? (
+            <div className="rounded-md border border-(--foreground)/15 bg-background/80 px-3 py-2 text-sm">
+              <span className="font-medium">Why: </span>
+              {blockReason.trim()}
+            </div>
+          ) : null}
+          <p className="text-sm">
+            <span className="font-medium">Restriction lifts: </span>
+            <time dateTime={blockUntil}>{formatListingBlockRelease(blockUntil)}</time>
+          </p>
+          <p className="text-sm text-(--foreground)/75">
+            After that time you can submit listings again from{' '}
+            <Link href="/list-your-house" className="underline hover:text-foreground">
+              List your house
+            </Link>
+            .
+          </p>
+        </section>
+      )}
+
       <section className="space-y-3 rounded border border-(--foreground)/15 p-4">
         <h2 className="text-lg font-medium">Sign-in email</h2>
         <p className="text-sm text-(--foreground)/70">

@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import React, { useEffect, useRef, useState } from 'react'
+import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from '@/components/UI/dropdown-menu'
 import { useSupabaseUser } from '@/lib/hooks/use-supabase-user'
 import type { Listing } from '@/types/listing'
 
@@ -50,14 +51,23 @@ export function ListingDetailSidebar({
     setStayMessage('')
   }, [listing?.id])
 
+  useEffect(() => {
+    if (!listing) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [listing, onClose])
+
   if (!listing) return null
 
   const photos = listing.photos.length > 0 ? listing.photos : ['https://picsum.photos/seed/placeholder/800/600']
   const currentPhoto = photos[photoIndex] ?? photos[0]
   const expiresLabel = listing.expiresAt
     ? new Date(listing.expiresAt).toLocaleDateString(undefined, {
-        dateStyle: 'medium',
-      })
+      dateStyle: 'medium',
+    })
     : null
 
   const canBookRemote =
@@ -108,29 +118,45 @@ export function ListingDetailSidebar({
             <button
               type="button"
               onClick={() => onToggleFavorite(listing.id)}
-              className="rounded p-2 hover:bg-[var(--foreground)]/10"
+              className="rounded p-2 hover:bg-(--foreground)/10 font-bold"
               aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
             >
-              <span className={isFavorite ? 'text-red-500' : 'text-[var(--foreground)]/60'}>
+              <span className={isFavorite ? 'text-red-500' : 'text-(--foreground)/60'}>
                 {isFavorite ? '♥' : '♡'}
               </span>
             </button>
           )}
           {onShare && (
-            <button
-              type="button"
-              onClick={() => onShare(listing)}
-              className="rounded p-2 hover:bg-[var(--foreground)]/10"
-              aria-label="Share listing"
+            <DropdownMenu
+              id={`listing-share-${listing.id}`}
+              align="end"
+              triggerClassName="inline-flex items-center gap-0.5 rounded p-2 text-sm hover:bg-[var(--foreground)]/10"
+              trigger={
+                <>
+                  Share
+                  <span aria-hidden className="text-(--foreground)/60">
+                    ▾
+                  </span>
+                </>
+              }
             >
-              Share
-            </button>
+              <DropdownMenuItem
+                onClick={() => {
+                  const url = `${typeof window !== 'undefined' ? window.location.origin : ''}?listing=${listing.id}`
+                  void navigator.clipboard?.writeText(url)
+                }}
+              >
+                Copy link
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => onShare(listing)}>Share via device…</DropdownMenuItem>
+            </DropdownMenu>
           )}
           <button
             ref={closeButtonRef}
             type="button"
             onClick={onClose}
-            className="rounded p-2 hover:bg-[var(--foreground)]/10"
+            className="rounded p-2 hover:bg-(--foreground)/10"
             aria-label="Close details"
           >
             ✕
@@ -140,7 +166,7 @@ export function ListingDetailSidebar({
 
       <div className="flex-1 overflow-y-auto">
         {/* Photo gallery */}
-        <div className="relative aspect-video w-full bg-[var(--foreground)]/5">
+        <div className="relative aspect-video w-full bg-(--foreground)/5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={currentPhoto}
@@ -151,19 +177,19 @@ export function ListingDetailSidebar({
             <>
               <button
                 type="button"
-                className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white hover:bg-black/70"
+                className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white hover:bg-black/70 w-12 h-12 shadow"
                 onClick={() => setPhotoIndex((i) => (i === 0 ? photos.length - 1 : i - 1))}
                 aria-label="Previous photo"
               >
-                ‹
+                &#x276E;
               </button>
               <button
                 type="button"
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white hover:bg-black/70"
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white hover:bg-black/70  w-12 h-12 shadow"
                 onClick={() => setPhotoIndex((i) => (i === photos.length - 1 ? 0 : i + 1))}
                 aria-label="Next photo"
               >
-                ›
+                &#x276F;
               </button>
               <div className="absolute bottom-2 left-1/2 flex -translate-x-1/2 gap-1">
                 {photos.map((_, i) => (
@@ -182,49 +208,46 @@ export function ListingDetailSidebar({
 
         <div className="p-4 space-y-4">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xl font-bold text-[var(--foreground)]">
+            <span className="text-xl font-bold text-foreground">
               {listing.currency} {listing.price.toLocaleString()}/mo
             </span>
-            <span className="rounded bg-[var(--foreground)]/10 px-2 py-0.5 text-sm">
+            <span className="rounded bg-(--foreground)/10 px-2 py-0.5 text-sm">
               {categoryLabel[listing.category]}
             </span>
           </div>
 
-          <ul className="flex flex-wrap gap-3 text-sm text-[var(--foreground)]/80">
-            <li>{listing.bedrooms} bed</li>
-            <li>{listing.bathrooms} bath</li>
-            <li>{listing.areaSqFt.toLocaleString()} sq ft</li>
+          <ul className="flex flex-wrap gap-3 text-sm text-(--foreground)/80">
+            <li><strong>{listing.bedrooms} </strong> bed</li>
+            <li><strong>{listing.bathrooms}</strong>  bath</li>
+            <li><strong>{listing.areaSqFt.toLocaleString()}</strong> <strong>sq ft</strong></li>
           </ul>
 
-          <p className="text-sm text-[var(--foreground)]/90">{listing.address}</p>
+          <p className="text-sm text-(--foreground)/90">{listing.address}</p>
           {expiresLabel && (
-            <p className="text-xs text-[var(--foreground)]/60">
+            <p className="text-xs text-(--foreground)/60">
               Listed until <span className="font-medium">{expiresLabel}</span>
             </p>
           )}
-          <p className="text-sm leading-relaxed">{listing.description}</p>
+          <h3 className="text-lg font-medium mb-1">Description</h3>
+          <p className="text-sm leading-relaxed whitespace-pre-line">{listing.description}</p>
 
           {listing.amenities.length > 0 && (
             <div>
-              <h3 className="text-sm font-medium mb-1">Amenities</h3>
+              <h3 className="text-lg font-medium mb-1">Amenities</h3>
               <ul className="flex flex-wrap gap-2">
-                {listing.amenities.map((a) => (
+                {listing.amenities.map((amenity) => (
                   <li
-                    key={a}
-                    className="rounded bg-[var(--foreground)]/10 px-2 py-1 text-sm"
+                    key={amenity}
+                    className="rounded shadow bg-(--foreground)/50 px-2 py-1 text-sm"
                   >
-                    {a}
+                    {amenity}
                   </li>
                 ))}
               </ul>
             </div>
           )}
 
-          {supabaseConfigured && listing.ownerId != null && userId === listing.ownerId && (
-            <p className="rounded border border-(--foreground)/15 bg-(--foreground)/5 px-3 py-2 text-sm text-(--foreground)/80">
-              This is your listing. Manage it from the dashboard.
-            </p>
-          )}
+
 
           {canBookRemote && (
             <div className="rounded border border-(--foreground)/15 p-3">
@@ -290,7 +313,7 @@ export function ListingDetailSidebar({
           )}
 
           {supabaseConfigured && listing.ownerId != null && userId === null && (
-            <p className="text-sm text-(--foreground)/80">
+            <p className="text-base text-(--foreground)/80">
               <Link href="/auth/login" className="font-medium underline">
                 Sign in
               </Link>{' '}
@@ -298,18 +321,18 @@ export function ListingDetailSidebar({
             </p>
           )}
 
-          <div>
-            <h3 className="text-sm font-medium mb-2">Contact</h3>
+          <div className='shadow rounded border border-(--foreground)/15 p-3'>
+            <h3 className="text-lg font-medium mb-2">Contact</h3>
             <div className="flex flex-col gap-2">
               <a
                 href={`tel:${listing.contact.phone.replace(/\s/g, '')}`}
-                className="text-sm text-blue-600 hover:underline"
+                className="text-sm font-bold hover:underline"
               >
                 {listing.contact.phone}
               </a>
               <a
                 href={`mailto:${listing.contact.email}`}
-                className="text-sm text-blue-600 hover:underline"
+                className="text-sm font-bold hover:underline"
               >
                 {listing.contact.email}
               </a>

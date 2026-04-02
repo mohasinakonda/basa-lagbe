@@ -87,14 +87,18 @@ export async function POST(request: Request) {
 
   const { data: moderation, error: modError } = await supabase
     .from('profiles')
-    .select('listing_creation_blocked_until')
+    .select('listing_creation_blocked_until, listing_creation_block_reason')
     .eq('id', user.id)
     .maybeSingle()
   if (!modError && moderation?.listing_creation_blocked_until) {
     const until = new Date(moderation.listing_creation_blocked_until as string).getTime()
     if (until > Date.now()) {
       return NextResponse.json(
-        { error: 'You cannot create new listings until the restriction on your account ends.' },
+        {
+          error: 'You cannot create new listings until the restriction on your account ends.',
+          listingCreationBlockedUntil: moderation.listing_creation_blocked_until as string,
+          listingCreationBlockReason: (moderation.listing_creation_block_reason as string | null) ?? null,
+        },
         { status: 403 }
       )
     }

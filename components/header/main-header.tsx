@@ -4,6 +4,25 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from '@/components/UI/dropdown-menu'
+import { Tooltip } from '@/components/UI/tooltip'
+
+function ChevronDown({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden
+    >
+      <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
 
 export const MainHeader = () => {
   const router = useRouter()
@@ -55,7 +74,10 @@ export const MainHeader = () => {
       <Link href="/" className="text-xl font-semibold hover:opacity-90">
         Basa Lagbe
       </Link>
-      <nav className="flex flex-wrap items-center justify-end gap-2 md:gap-4">
+      <nav
+        className="flex flex-wrap items-center justify-end gap-2 md:gap-3"
+        aria-label="Main"
+      >
         <Link
           href="/contact"
           className="text-sm font-medium text-foreground hover:underline"
@@ -64,39 +86,24 @@ export const MainHeader = () => {
         </Link>
         {configured && (
           <>
-            <Link
-              href="/dashboard"
-              className="text-sm text-(--foreground)/80 hover:underline"
-            >
-              Dashboard
-            </Link>
-            {role === 'admin' && (
-              <Link
-                href="/admin"
-                className="text-sm font-medium text-(--foreground)/90 hover:underline"
-              >
-                Admin
-              </Link>
-            )}
             {email ? (
-              <>
-                <Link
-                  href="/account"
-                  className="text-sm text-(--foreground)/80 hover:underline"
-                >
-                  Account
-                </Link>
-                <span className="hidden max-w-[140px] truncate text-xs text-(--foreground)/60 md:inline">
-                  {email}
-                </span>
-                <button
-                  type="button"
-                  onClick={handleSignOut}
-                  className="rounded border border-(--foreground)/20 px-3 py-1.5 text-sm hover:bg-(--foreground)/10"
-                >
-                  Sign out
-                </button>
-              </>
+              <DropdownMenu
+                id="account-menu"
+                align="end"
+                triggerClassName="inline-flex max-w-[min(100vw-8rem,220px)] items-center gap-1 rounded-lg border border-(--foreground)/20 px-3 py-1.5 text-sm text-(--foreground)/90 hover:bg-(--foreground)/10"
+                trigger={
+                  <>
+                    <span className="truncate">{email}</span>
+                    <ChevronDown className="shrink-0 opacity-70" />
+                  </>
+                }
+              >
+                <DropdownMenuItem href="/dashboard">Dashboard</DropdownMenuItem>
+                {role === 'admin' && <DropdownMenuItem href="/admin">Admin</DropdownMenuItem>}
+                <DropdownMenuItem href="/account">Account settings</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => void handleSignOut()}>Sign out</DropdownMenuItem>
+              </DropdownMenu>
             ) : (
               <Link
                 href="/auth/login"
@@ -107,13 +114,15 @@ export const MainHeader = () => {
             )}
           </>
         )}
-        <Link
-          href="/list-your-house"
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--foreground)] text-[var(--background)] hover:opacity-90"
-          aria-label="List your house"
-        >
-          +
-        </Link>
+        <Tooltip content="List your property" delay={350} placement="bottom">
+          <Link
+            href="/list-your-house"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--foreground)] text-[var(--background)] hover:opacity-90"
+            aria-label="List your house"
+          >
+            +
+          </Link>
+        </Tooltip>
       </nav>
     </header>
   )

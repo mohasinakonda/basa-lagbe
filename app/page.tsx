@@ -138,7 +138,7 @@ function HomeContent() {
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify({ path, referrer }),
-    }).catch(() => {})
+    }).catch(() => { })
   }, [selectedListing?.id, supabaseConfigured])
 
   const handleSelectListing = useCallback((id: string | null) => {
@@ -199,8 +199,17 @@ function HomeContent() {
         favoritesCount={favorites.size}
       />
       <div className="relative flex flex-1 overflow-hidden">
+
+        <div className="relative min-w-0 flex-1">
+          <Map
+            listings={filteredListings}
+            selectedListingId={selectedListingId}
+            onSelectListing={handleSelectListing}
+          />
+        </div>
+
         {selectedListing && (
-          <div className="absolute left-0 top-0 z-10 h-full w-full max-w-sm shrink-0 md:relative md:z-0">
+          <div className="absolute right-0 top-0 z-10 h-full w-full max-w-sm shrink-0 md:relative md:z-0">
             <ListingDetailSidebar
               listing={selectedListing}
               onClose={handleCloseSidebar}
@@ -210,13 +219,6 @@ function HomeContent() {
             />
           </div>
         )}
-        <div className="relative min-w-0 flex-1">
-          <Map
-            listings={filteredListings}
-            selectedListingId={selectedListingId}
-            onSelectListing={handleSelectListing}
-          />
-        </div>
       </div>
     </main>
   )
