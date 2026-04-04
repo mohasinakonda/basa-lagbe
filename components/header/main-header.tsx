@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from '@/components/UI/dropdown-menu'
 import { Tooltip } from '@/components/UI/tooltip'
@@ -33,31 +33,29 @@ export const MainHeader = () => {
   useEffect(() => {
     if (!configured) return
     const supabase = createClient()
-    supabase.auth.getUser().then(({ data }) => {
-      setEmail(data.user?.email ?? null)
-    })
+    const getUser = async () => {
+      const user = await supabase.auth.getUser()
+      setEmail(user.data.user?.email ?? null)
+    }
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_e, session) => {
       setEmail(session?.user?.email ?? null)
     })
+    getUser()
     return () => subscription.unsubscribe()
   }, [configured])
 
+
   useEffect(() => {
-    if (!email || !configured) {
-      queueMicrotask(() => setRole(null))
-      return
+    const fetchProfile = async () => {
+      const response = await fetch('/api/profile', { credentials: 'include' })
+      if (!response.ok) return
+      const user = await response.json()
+      setRole(user?.profile?.role ?? null)
+
     }
-    let cancelled = false
-    void fetch('/api/profile', { credentials: 'include' }).then(async (res) => {
-      if (!res.ok || cancelled) return
-      const j = (await res.json().catch(() => null)) as { profile?: { role?: string } } | null
-      if (!cancelled) setRole(j?.profile?.role ?? null)
-    })
-    return () => {
-      cancelled = true
-    }
+    fetchProfile()
   }, [email, configured])
 
   const handleSignOut = async () => {
@@ -90,7 +88,7 @@ export const MainHeader = () => {
               <DropdownMenu
                 id="account-menu"
                 align="end"
-                triggerClassName="inline-flex max-w-[min(100vw-8rem,220px)] items-center gap-1 rounded-lg border border-(--foreground)/20 px-3 py-1.5 text-sm text-(--foreground)/90 hover:bg-(--foreground)/10"
+                triggerClassName="inline-flex max-w-[min(100vw-8rem,220px)] items-center gap-1 rounded border border-(--foreground)/20 px-3 py-1.5 text-sm text-(--foreground)/90 hover:bg-(--foreground)/10"
                 trigger={
                   <>
                     <span className="truncate">{email}</span>
@@ -117,10 +115,10 @@ export const MainHeader = () => {
         <Tooltip content="List your property" delay={350} placement="bottom">
           <Link
             href="/list-your-house"
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--foreground)] text-[var(--background)] hover:opacity-90"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-foreground text-background hover:opacity-90"
             aria-label="List your house"
           >
-            +
+            &#10010;
           </Link>
         </Tooltip>
       </nav>
