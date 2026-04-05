@@ -103,3 +103,30 @@ export async function PATCH(request: Request, context: RouteContext) {
 
   return NextResponse.json({ listing: rowToListing(data as ListingRow) })
 }
+
+export async function DELETE(_request: Request, context: RouteContext) {
+  if (!isSupabaseConfigured()) {
+    return NextResponse.json({ error: 'Supabase is not configured' }, { status: 503 })
+  }
+
+  const { id } = await context.params
+  const supabase = await createClient()
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
+  if (userError || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const { data, error } = await supabase.from('listings').delete().eq('id', id).select('id').maybeSingle()
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+  if (!data) {
+    return NextResponse.json({ error: 'Not found or forbidden' }, { status: 404 })
+  }
+
+  return new NextResponse(null, { status: 204 })
+}

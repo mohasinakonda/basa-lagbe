@@ -68,7 +68,7 @@ export const MainHeader = () => {
   }
 
   return (
-    <header className="flex h-20 items-center justify-between border-b border-[var(--foreground)]/10 px-4 py-2 md:px-8">
+    <header className=" flex h-20 items-center justify-between border-b border-[var(--foreground)]/10 px-4 py-2 md:px-8">
       <Link href="/" className="text-xl font-semibold hover:opacity-90">
         Basa Lagbe
       </Link>

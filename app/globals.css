@@ -1,5 +1,9 @@
 @import 'tailwindcss';
-
+/* Primary: Blue → #2563EB
+Secondary: Green → #22C55E
+Accent: Orange → #F97316
+Background: Light Gray → #F9FAFB
+Text: Dark Gray → #111827 */
 :root {
 	--background: #ffffff;
 	--foreground: #171717;

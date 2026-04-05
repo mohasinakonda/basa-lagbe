@@ -24,7 +24,7 @@ export async function GET() {
   return NextResponse.json({ profile: data })
 }
 
-type PatchBody = { displayName?: string }
+type PatchBody = { displayName?: string; contactAddress?: string }
 
 export async function PATCH(request: Request) {
   if (!isSupabaseConfigured()) {
@@ -47,13 +47,20 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
-  if (body.displayName == null) {
+  if (body.displayName == null && body.contactAddress === undefined) {
     return NextResponse.json({ error: 'Nothing to update' }, { status: 400 })
+  }
+
+  const updates: { display_name?: string; contact_address?: string | null } = {}
+  if (body.displayName != null) updates.display_name = body.displayName.trim()
+  if (body.contactAddress !== undefined) {
+    const t = body.contactAddress.trim()
+    updates.contact_address = t.length > 0 ? t : null
   }
 
   const { data, error } = await supabase
     .from('profiles')
-    .update({ display_name: body.displayName.trim() })
+    .update(updates)
     .eq('id', user.id)
     .select('*')
     .single()

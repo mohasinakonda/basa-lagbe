@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { isSupabaseConfigured } from '@/lib/env'
-import { rowToBooking, type BookingRow } from '@/lib/booking-mapper'
+import { BOOKING_LIST_SELECT, rowToBooking, type BookingRowWithRelations } from '@/lib/booking-mapper'
 
 type RouteContext = { params: Promise<{ id: string }> }
 
-type PatchBody = { action: 'confirm' | 'decline' | 'cancel' }
+type PatchBody = { action: 'confirm' | 'decline' | 'cancel'; declineMessage?: string }
+
+const DECLINE_MAX = 500
 
 export async function PATCH(request: Request, context: RouteContext) {
   if (!isSupabaseConfigured()) {
@@ -38,7 +40,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       .from('bookings')
       .update({ status: 'cancelled_by_guest' })
       .eq('id', id)
-      .select('*')
+      .select(BOOKING_LIST_SELECT)
       .single()
 
     if (error) {
@@ -47,18 +49,33 @@ export async function PATCH(request: Request, context: RouteContext) {
       }
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
-    return NextResponse.json({ booking: rowToBooking(data as BookingRow) })
+    return NextResponse.json({ booking: rowToBooking(data as BookingRowWithRelations) })
   }
 
   const status = body.action === 'confirm' ? 'confirmed' : 'declined'
+  const declineMessage = body.declineMessage?.trim() ?? ''
+
+  if (body.action === 'decline') {
+    if (!declineMessage) {
+      return NextResponse.json(
+        { error: 'Add a short note for the guest explaining why you are declining.' },
+        { status: 400 },
+      )
+    }
+    if (declineMessage.length > DECLINE_MAX) {
+      return NextResponse.json({ error: `Message must be at most ${DECLINE_MAX} characters.` }, { status: 400 })
+    }
+  }
+
   const { data, error } = await supabase
     .from('bookings')
     .update({
       status,
       owner_responded_at: new Date().toISOString(),
+      owner_decline_message: body.action === 'decline' ? declineMessage : null,
     })
     .eq('id', id)
-    .select('*')
+    .select(BOOKING_LIST_SELECT)
     .single()
 
   if (error) {
@@ -68,5 +85,5 @@ export async function PATCH(request: Request, context: RouteContext) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json({ booking: rowToBooking(data as BookingRow) })
+  return NextResponse.json({ booking: rowToBooking(data as BookingRowWithRelations) })
 }

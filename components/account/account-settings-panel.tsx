@@ -13,6 +13,7 @@ import {
 type ProfileRow = {
   id: string
   display_name: string | null
+  contact_address?: string | null
   phone_e164: string | null
   phone_verified_at: string | null
   listing_creation_blocked_until?: string | null
@@ -24,8 +25,11 @@ export function AccountSettingsPanel() {
   const [email, setEmail] = useState<string | null>(null)
   const [profile, setProfile] = useState<ProfileRow | null>(null)
   const [displayName, setDisplayName] = useState('')
+  const [contactAddress, setContactAddress] = useState('')
   const [nameMsg, setNameMsg] = useState<string | null>(null)
   const [nameBusy, setNameBusy] = useState(false)
+  const [addressMsg, setAddressMsg] = useState<string | null>(null)
+  const [addressBusy, setAddressBusy] = useState(false)
   const [phoneInput, setPhoneInput] = useState('')
   const [codeInput, setCodeInput] = useState('')
   const [phoneMsg, setPhoneMsg] = useState<string | null>(null)
@@ -50,6 +54,7 @@ export function AccountSettingsPanel() {
         const p = j.profile ?? null
         setProfile(p)
         setDisplayName(p?.display_name?.trim() ?? '')
+        setContactAddress(p?.contact_address?.trim() ?? '')
         if (p?.phone_e164) setPhoneInput(p.phone_e164)
       }
     } finally {
@@ -79,6 +84,27 @@ export function AccountSettingsPanel() {
       setNameMsg(e instanceof Error ? e.message : 'Failed')
     } finally {
       setNameBusy(false)
+    }
+  }
+
+  const saveContactAddress = async () => {
+    setAddressMsg(null)
+    setAddressBusy(true)
+    try {
+      const res = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ contactAddress }),
+      })
+      const j = (await res.json().catch(() => ({}))) as { error?: string; profile?: ProfileRow }
+      if (!res.ok) throw new Error(j.error ?? 'Could not save')
+      if (j.profile) setProfile(j.profile)
+      setAddressMsg('Saved.')
+    } catch (e) {
+      setAddressMsg(e instanceof Error ? e.message : 'Failed')
+    } finally {
+      setAddressBusy(false)
     }
   }
 
@@ -206,6 +232,35 @@ export function AccountSettingsPanel() {
           </button>
         </div>
         {nameMsg && <p className="text-sm text-(--foreground)/80">{nameMsg}</p>}
+      </section>
+
+      <section className="space-y-3 rounded border border-(--foreground)/15 p-4">
+        <h2 className="text-lg font-medium">Your address</h2>
+        <p className="text-sm text-(--foreground)/70">
+          Optional. Hosts see this when you request a booking so they know how to reach you.
+        </p>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+          <div className="flex-1">
+            <Label htmlFor="contactAddress">Address</Label>
+            <textarea
+              id="contactAddress"
+              rows={3}
+              value={contactAddress}
+              onChange={(e) => setContactAddress(e.target.value)}
+              placeholder="Area, city, etc."
+              className="w-full rounded border border-(--foreground)/20 bg-background px-2 py-1.5 text-sm outline-none focus:border-(--foreground)/40"
+            />
+          </div>
+          <button
+            type="button"
+            disabled={addressBusy}
+            onClick={() => void saveContactAddress()}
+            className="rounded bg-foreground px-4 py-2 text-sm text-background hover:opacity-90 disabled:opacity-50"
+          >
+            Save
+          </button>
+        </div>
+        {addressMsg && <p className="text-sm text-(--foreground)/80">{addressMsg}</p>}
       </section>
 
       <section className="space-y-3 rounded border border-(--foreground)/15 p-4">

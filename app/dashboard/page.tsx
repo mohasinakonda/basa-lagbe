@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import React, { useCallback, useEffect, useState } from 'react'
+import { MyListingsSection } from '@/components/dashboard/my-listings-section'
+import { OwnerBookingRequestsSection } from '@/components/dashboard/owner-booking-requests-section'
 import type { Booking } from '@/types/booking'
 import type { Listing } from '@/types/listing'
 export default function DashboardPage() {
@@ -21,22 +23,25 @@ export default function DashboardPage() {
     }
     setLoading(true)
     try {
-      const [mineRes, bookRes] = await Promise.all([
+      const [mineListingsResponse, bookingsListResponse] = await Promise.all([
         fetch('/api/listings/mine', { credentials: 'include' }),
         fetch('/api/bookings', { credentials: 'include' }),
       ])
-      if (mineRes.status === 401 || bookRes.status === 401) {
+      if (mineListingsResponse.status === 401 || bookingsListResponse.status === 401) {
         setUnauthorized(true)
         return
       }
-      if (mineRes.ok) {
-        const j = (await mineRes.json()) as { listings?: Listing[] }
-        setMyListings(j.listings ?? [])
+      if (mineListingsResponse.ok) {
+        const listingsPayload = (await mineListingsResponse.json()) as { listings?: Listing[] }
+        setMyListings(listingsPayload.listings ?? [])
       }
-      if (bookRes.ok) {
-        const j = (await bookRes.json()) as { asGuest?: Booking[]; asOwner?: Booking[] }
-        setAsGuest(j.asGuest ?? [])
-        setAsOwner(j.asOwner ?? [])
+      if (bookingsListResponse.ok) {
+        const bookingsPayload = (await bookingsListResponse.json()) as {
+          asGuest?: Booking[]
+          asOwner?: Booking[]
+        }
+        setAsGuest(bookingsPayload.asGuest ?? [])
+        setAsOwner(bookingsPayload.asOwner ?? [])
       }
     } finally {
       setLoading(false)
@@ -54,24 +59,34 @@ export default function DashboardPage() {
     }
   }, [configured, loading, unauthorized, router])
 
-  const respondBooking = async (id: string, action: 'confirm' | 'decline') => {
-    const res = await fetch(`/api/bookings/${id}`, {
+  const respondBooking = async (
+    bookingId: string,
+    action: 'confirm' | 'decline',
+    declineMessage?: string,
+  ) => {
+    const response = await fetch(`/api/bookings/${bookingId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({ action }),
+      body: JSON.stringify(
+        action === 'decline' ? { action: 'decline', declineMessage } : { action: 'confirm' },
+      ),
     })
-    if (res.ok) await load()
+    if (!response.ok) {
+      const j = (await response.json().catch(() => ({}))) as { error?: string }
+      throw new Error(j.error ?? 'Could not update booking')
+    }
+    await load()
   }
 
-  const cancelBooking = async (id: string) => {
-    const res = await fetch(`/api/bookings/${id}`, {
+  const cancelBooking = async (bookingId: string) => {
+    const response = await fetch(`/api/bookings/${bookingId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify({ action: 'cancel' }),
     })
-    if (res.ok) await load()
+    if (response.ok) await load()
   }
 
   if (!configured) {
@@ -96,16 +111,14 @@ export default function DashboardPage() {
   }
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10 space-y-10">
+    <main className="mx-auto max-w-5xl px-4 py-10 space-y-10">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">Dashboard</h1>
         <div className="flex flex-wrap gap-4 text-sm text-(--foreground)/80">
-          <Link href="/account" className="hover:underline">
+          <Link href="/account" className="hover:no-underline underline">
             Account settings
           </Link>
-          <Link href="/" className="hover:underline">
-            ← Map
-          </Link>
+
         </div>
       </div>
 
@@ -117,83 +130,9 @@ export default function DashboardPage() {
         under Account.
       </p>
 
-      <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-medium">My listings</h2>
-          <Link
-            href="/list-your-house"
-            className="text-sm font-medium text-(--foreground)/80 underline"
-          >
-            New listing
-          </Link>
-        </div>
-        {myListings.length === 0 ? (
-          <p className="text-sm text-(--foreground)/65">No listings yet.</p>
-        ) : (
-          <ul className="space-y-2">
-            {myListings.map((l) => (
-              <li
-                key={l.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded border border-(--foreground)/15 px-3 py-2"
-              >
-                <div>
-                  <p className="font-medium">{l.title}</p>
-                  <p className="text-xs text-(--foreground)/60">
-                    {l.publicationStatus ?? '—'} · expires{' '}
-                    {l.expiresAt ? new Date(l.expiresAt).toLocaleDateString() : '—'}
-                  </p>
-                </div>
-                <Link
-                  href={`/dashboard/listings/${l.id}/edit`}
-                  className="text-sm underline"
-                >
-                  Edit
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      <MyListingsSection listings={myListings} onAfterMutation={load} />
 
-      <section className="space-y-3">
-        <h2 className="text-lg font-medium">Booking requests on my listings</h2>
-        {asOwner.filter((b) => b.status === 'pending_owner').length === 0 ? (
-          <p className="text-sm text-(--foreground)/65">No pending requests.</p>
-        ) : (
-          <ul className="space-y-3">
-            {asOwner
-              .filter((b) => b.status === 'pending_owner')
-              .map((b) => (
-                <li
-                  key={b.id}
-                  className="rounded border border-(--foreground)/15 p-3 text-sm space-y-2"
-                >
-                  <p className="font-medium">{b.listingTitle}</p>
-                  <p className="text-(--foreground)/75">
-                    {b.guestDisplayName} · {b.requestedStart} → {b.requestedEnd}
-                  </p>
-                  {b.message && <p className="text-(--foreground)/80">{b.message}</p>}
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      className="rounded bg-foreground px-3 py-1.5 text-background text-xs hover:opacity-90"
-                      onClick={() => respondBooking(b.id, 'confirm')}
-                    >
-                      Confirm
-                    </button>
-                    <button
-                      type="button"
-                      className="rounded border border-(--foreground)/25 px-3 py-1.5 text-xs hover:bg-(--foreground)/10"
-                      onClick={() => respondBooking(b.id, 'decline')}
-                    >
-                      Decline
-                    </button>
-                  </div>
-                </li>
-              ))}
-          </ul>
-        )}
-      </section>
+      <OwnerBookingRequestsSection bookings={asOwner} onRespond={respondBooking} />
 
       <section className="space-y-3">
         <h2 className="text-lg font-medium">My booking requests</h2>
@@ -201,22 +140,29 @@ export default function DashboardPage() {
           <p className="text-sm text-(--foreground)/65">You have not requested any stays yet.</p>
         ) : (
           <ul className="space-y-2">
-            {asGuest.map((b) => (
+            {asGuest.map((booking) => (
               <li
-                key={b.id}
+                key={booking.id}
                 className="flex flex-wrap items-center justify-between gap-2 rounded border border-(--foreground)/15 px-3 py-2 text-sm"
               >
-                <div>
-                  <p className="font-medium">{b.listingTitle}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium">{booking.listingTitle}</p>
                   <p className="text-xs text-(--foreground)/60">
-                    {b.status.replace(/_/g, ' ')} · {b.requestedStart} → {b.requestedEnd}
+                    {booking.status.replace(/_/g, ' ')} · {booking.requestedStart} →{' '}
+                    {booking.requestedEnd}
                   </p>
+                  {booking.status === 'declined' && booking.ownerDeclineMessage?.trim() ? (
+                    <p className="mt-1 text-xs text-(--foreground)/75">
+                      <span className="text-(--foreground)/50">Host note: </span>
+                      {booking.ownerDeclineMessage.trim()}
+                    </p>
+                  ) : null}
                 </div>
-                {b.status === 'pending_owner' && (
+                {booking.status === 'pending_owner' && (
                   <button
                     type="button"
                     className="text-xs underline"
-                    onClick={() => cancelBooking(b.id)}
+                    onClick={() => cancelBooking(booking.id)}
                   >
                     Cancel request
                   </button>

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { ensureUserProfile } from '@/lib/ensure-user-profile'
 import { isSupabaseConfigured } from '@/lib/env'
-import { rowToBooking, type BookingRow } from '@/lib/booking-mapper'
+import { BOOKING_LIST_SELECT, rowToBooking, type BookingRowWithRelations } from '@/lib/booking-mapper'
 
 export async function GET() {
   if (!isSupabaseConfigured()) {
@@ -18,24 +18,41 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { data: asGuest, error: eg } = await supabase
-    .from('bookings')
-    .select('*')
-    .eq('guest_id', user.id)
-    .order('created_at', { ascending: false })
+  // RLS allows SELECT when user is guest OR listing owner (policies are OR'd). We must
+  // query owner bookings only for listings we own; an unfiltered select would include
+  // the user's own guest bookings in the "owner" result set.
+  const [
+    { data: asGuestRows, error: eg },
+    { data: ownedListings, error: el },
+  ] = await Promise.all([
+    supabase
+      .from('bookings')
+      .select(BOOKING_LIST_SELECT)
+      .eq('guest_id', user.id)
+      .order('created_at', { ascending: false }),
+    supabase.from('listings').select('id').eq('owner_id', user.id),
+  ])
 
-  const { data: asOwner, error: eo } = await supabase
-    .from('bookings')
-    .select('*')
-    .order('created_at', { ascending: false })
-
-  if (eg || eo) {
-    return NextResponse.json({ error: eg?.message ?? eo?.message }, { status: 500 })
+  if (eg || el) {
+    return NextResponse.json({ error: eg?.message ?? el?.message }, { status: 500 })
   }
 
-  // RLS already filters asOwner to bookings on user's listings
-  const guestBookings = (asGuest as BookingRow[] | null)?.map(rowToBooking) ?? []
-  const ownerBookings = (asOwner as BookingRow[] | null)?.map(rowToBooking) ?? []
+  const ownedIds = ownedListings?.map((l) => l.id) ?? []
+  const { data: asOwnerRows, error: eo } =
+    ownedIds.length === 0
+      ? { data: [] as BookingRowWithRelations[] | null, error: null }
+      : await supabase
+          .from('bookings')
+          .select(BOOKING_LIST_SELECT)
+          .in('listing_id', ownedIds)
+          .order('created_at', { ascending: false })
+
+  if (eo) {
+    return NextResponse.json({ error: eo.message }, { status: 500 })
+  }
+
+  const guestBookings = (asGuestRows as BookingRowWithRelations[] | null)?.map(rowToBooking) ?? []
+  const ownerBookings = (asOwnerRows as BookingRowWithRelations[] | null)?.map(rowToBooking) ?? []
 
   return NextResponse.json({ asGuest: guestBookings, asOwner: ownerBookings })
 }
@@ -106,16 +123,21 @@ export async function POST(request: Request) {
     listing_id: body.listingId,
     guest_id: user.id,
     guest_display_name: profile.display_name ?? 'Guest',
+    guest_email: user.email ?? null,
     listing_title: lr.title,
     requested_start: body.requestedStart,
     requested_end: body.requestedEnd,
     message: body.message?.trim() || null,
   }
 
-  const { data, error } = await supabase.from('bookings').insert(insert).select('*').single()
+  const { data, error } = await supabase
+    .from('bookings')
+    .insert(insert)
+    .select(BOOKING_LIST_SELECT)
+    .single()
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json({ booking: rowToBooking(data as BookingRow) }, { status: 201 })
+  return NextResponse.json({ booking: rowToBooking(data as BookingRowWithRelations) }, { status: 201 })
 }
