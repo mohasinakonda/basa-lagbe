@@ -15,6 +15,7 @@ import {
   useInteractions,
   useRole,
 } from '@floating-ui/react'
+import { FilterSheetFloatingRootRefContext } from '@/components/filters/FilterSheetFloatingRootContext'
 
 export type FloatingSelectOption<T extends string> = {
   value: T
@@ -41,6 +42,7 @@ export function FloatingSelect<T extends string>({
   const [open, setOpen] = React.useState(false)
   const listboxId = React.useId()
   const selected = options.find((o) => o.value === value)
+  const filterSheetDialogRef = React.useContext(FilterSheetFloatingRootRefContext)
 
   const { refs, floatingStyles, context } = useFloating({
     open,
@@ -61,7 +63,7 @@ export function FloatingSelect<T extends string>({
     whileElementsMounted: autoUpdate,
   })
 
-  const click = useClick(context, { event: 'mousedown' })
+  const click = useClick(context)
   const dismiss = useDismiss(context)
   const role = useRole(context, { role: 'listbox' })
   const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss, role])
@@ -81,7 +83,7 @@ export function FloatingSelect<T extends string>({
         aria-expanded={open}
         aria-controls={listboxId}
         aria-label={ariaLabel}
-        className={`flex min-w-[7rem] items-center justify-between gap-2 rounded border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-1.5 text-sm hover:bg-[var(--foreground)]/5 ${buttonClassName}`}
+        className={`flex min-w-[7rem] items-center justify-between gap-2 rounded border border-[var(--foreground)]/25 bg-[var(--background)] px-3 py-1.5 text-sm text-[var(--foreground)] hover:bg-[var(--foreground)]/5 ${buttonClassName}`}
         {...getReferenceProps()}
       >
         <span>{selected?.label ?? value}</span>
@@ -90,7 +92,7 @@ export function FloatingSelect<T extends string>({
         </span>
       </button>
       {open && (
-        <FloatingPortal>
+        <FloatingPortal root={filterSheetDialogRef ?? undefined}>
           <FloatingFocusManager context={context} modal={false} returnFocus>
             <div
               ref={refs.setFloating} // eslint-disable-line react-hooks/refs -- Floating UI setter
@@ -98,7 +100,7 @@ export function FloatingSelect<T extends string>({
               role="listbox"
               aria-labelledby={id}
               style={floatingStyles}
-              className="z-[150] max-h-60 overflow-auto rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] py-1 shadow-lg outline-none"
+              className="z-[150] max-h-60 overflow-auto rounded-md border border-[var(--foreground)]/25 bg-[var(--background)] py-1 text-[var(--foreground)] shadow-lg outline-none"
               {...getFloatingProps()}
             >
               {options.map((opt) => (
@@ -106,7 +108,7 @@ export function FloatingSelect<T extends string>({
                   key={String(opt.value)}
                   role="option"
                   aria-selected={opt.value === value}
-                  className={`cursor-pointer px-3 py-2 text-sm outline-none hover:bg-[var(--foreground)]/10 ${
+                  className={`cursor-pointer px-3 py-2 text-sm text-[var(--foreground)] outline-none hover:bg-[var(--foreground)]/10 ${
                     opt.value === value ? 'bg-[var(--foreground)]/15 font-medium' : ''
                   }`}
                   onMouseDown={(e) => e.preventDefault()}
