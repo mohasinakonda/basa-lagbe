@@ -15,15 +15,15 @@ type Summary = {
 function BarChart({ series }: { series: { date: string; count: number }[] }) {
   const max = Math.max(1, ...series.map((s) => s.count))
   return (
-    <div className="flex h-40 items-end gap-1 border-b border-(--foreground)/15 pb-1">
+    <div className="flex h-40 items-end gap-1 border-b border-border pb-1">
       {series.map((s) => (
         <div key={s.date} className="flex flex-1 flex-col items-center gap-1">
           <div
-            className="w-full min-w-0 rounded-t bg-(--foreground)/80 transition-[height]"
+            className="w-full min-w-0 rounded-t bg-primary/75 transition-[height]"
             style={{ height: `${(s.count / max) * 100}%`, minHeight: s.count > 0 ? 4 : 0 }}
             title={`${s.date}: ${s.count}`}
           />
-          <span className="max-w-full truncate text-[10px] text-(--foreground)/50">
+          <span className="max-w-full truncate text-[10px] text-muted-foreground">
             {s.date.slice(5)}
           </span>
         </div>
@@ -58,7 +58,7 @@ export default function AdminOverviewPage() {
   }, [load])
 
   if (loading) {
-    return <p className="text-sm text-(--foreground)/70">Loading…</p>
+    return <p className="text-sm text-muted-foreground">Loading…</p>
   }
   if (error) {
     return (
@@ -92,9 +92,9 @@ export default function AdminOverviewPage() {
           {cards.map((c) => (
             <div
               key={c.label}
-              className="rounded-lg border border-(--foreground)/15 bg-(--foreground)/[0.03] px-4 py-3"
+              className="rounded-lg border border-border bg-muted/40 px-4 py-3"
             >
-              <p className="text-xs font-medium uppercase tracking-wide text-(--foreground)/55">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 {c.label}
               </p>
               <p className="mt-1 text-2xl font-semibold tabular-nums">{c.value}</p>
@@ -105,7 +105,7 @@ export default function AdminOverviewPage() {
 
       <section>
         <h2 className="mb-2 text-lg font-medium">Impressions last 7 days</h2>
-        <p className="mb-4 text-sm text-(--foreground)/65">Listing views recorded on the map (deduped per session).</p>
+        <p className="mb-4 text-sm text-muted-foreground">Listing views recorded on the map (deduped per session).</p>
         <BarChart series={summary.impressionsByDayLast7} />
       </section>
     </div>

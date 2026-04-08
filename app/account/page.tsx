@@ -44,7 +44,7 @@ export default function AccountPage() {
   if (!checked || !signedIn) {
     return (
       <main className="mx-auto max-w-3xl px-4 py-10">
-        <p className="text-sm text-(--foreground)/70">Loading…</p>
+        <p className="text-sm text-muted-foreground">Loading…</p>
       </main>
     )
   }
@@ -53,7 +53,7 @@ export default function AccountPage() {
     <main className="mx-auto max-w-3xl px-4 py-10 space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">Account</h1>
-        <div className="flex flex-wrap gap-4 text-sm text-(--foreground)/80">
+        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
           <Link href="/dashboard" className="hover:underline">
             Dashboard
           </Link>
@@ -62,7 +62,7 @@ export default function AccountPage() {
           </Link>
         </div>
       </div>
-      <p className="text-sm text-(--foreground)/70">
+      <p className="text-sm text-muted-foreground">
         Update how you appear on the site and verify your phone for bookings.
       </p>
       <AccountSettingsPanel />

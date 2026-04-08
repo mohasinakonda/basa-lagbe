@@ -16,12 +16,12 @@ type Analytics = {
 function barRow(label: string, count: number, max: number) {
   return (
     <div key={label} className="flex items-center gap-2 text-xs">
-      <span className="w-28 shrink-0 truncate text-(--foreground)/65" title={label}>
+      <span className="w-28 shrink-0 truncate text-muted-foreground" title={label}>
         {label}
       </span>
-      <div className="h-2 min-w-0 flex-1 rounded-full bg-(--foreground)/10">
+      <div className="h-2 min-w-0 flex-1 rounded-full bg-muted">
         <div
-          className="h-2 rounded-full bg-(--foreground)/70"
+          className="h-2 rounded-full bg-primary/80"
           style={{ width: `${(count / max) * 100}%` }}
         />
       </div>
@@ -69,11 +69,11 @@ export default function AdminListingAnalyticsPage() {
           ← Listings
         </Link>
         <label className="flex items-center gap-2 text-sm">
-          <span className="text-(--foreground)/65">Range</span>
+          <span className="text-muted-foreground">Range</span>
           <select
             value={days}
             onChange={(e) => setDays(Number(e.target.value))}
-            className="rounded border border-(--foreground)/20 bg-transparent px-2 py-1 text-sm"
+            className="rounded border border-border bg-transparent px-2 py-1 text-sm"
           >
             <option value={7}>7 days</option>
             <option value={30}>30 days</option>
@@ -82,7 +82,7 @@ export default function AdminListingAnalyticsPage() {
         </label>
       </div>
 
-      {loading && <p className="text-sm text-(--foreground)/70">Loading…</p>}
+      {loading && <p className="text-sm text-muted-foreground">Loading…</p>}
       {error && (
         <p className="text-sm text-red-600 dark:text-red-400">
           {error}{' '}
@@ -96,8 +96,8 @@ export default function AdminListingAnalyticsPage() {
         <>
           <div>
             <h2 className="text-xl font-semibold">{data.listing.title}</h2>
-            <p className="mt-1 font-mono text-xs text-(--foreground)/55">{data.listing.id}</p>
-            <p className="mt-2 text-sm text-(--foreground)/70">
+            <p className="mt-1 font-mono text-xs text-muted-foreground">{data.listing.id}</p>
+            <p className="mt-2 text-sm text-muted-foreground">
               <span className="font-medium tabular-nums">{data.total}</span> views in the last{' '}
               {data.days} days (capped at 5000 events loaded).
             </p>

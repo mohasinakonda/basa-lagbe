@@ -92,10 +92,11 @@ export default function DashboardPage() {
   if (!configured) {
     return (
       <main className="mx-auto max-w-3xl px-4 py-10">
-        <p className="text-(--foreground)/80">
-          Connect Supabase (see <code className="text-xs">.env.example</code>) to use the dashboard.
+        <p className="text-muted-foreground">
+          Connect Supabase (see <code className="text-xs text-foreground">.env.example</code>) to use
+          the dashboard.
         </p>
-        <Link href="/" className="mt-4 inline-block text-sm underline">
+        <Link href="/" className="mt-4 inline-block text-sm font-medium text-primary hover:underline">
           Back home
         </Link>
       </main>
@@ -105,26 +106,25 @@ export default function DashboardPage() {
   if (loading || unauthorized) {
     return (
       <main className="mx-auto max-w-3xl px-4 py-10">
-        <p className="text-(--foreground)/70">Loading…</p>
+        <p className="text-muted-foreground">Loading…</p>
       </main>
     )
   }
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-10 space-y-10">
+    <main className="mx-auto max-w-5xl space-y-10 px-4 py-10">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <div className="flex flex-wrap gap-4 text-sm text-(--foreground)/80">
-          <Link href="/account" className="hover:no-underline underline">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Dashboard</h1>
+        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+          <Link href="/account" className="font-medium text-foreground underline-offset-2 hover:underline">
             Account settings
           </Link>
-
         </div>
       </div>
 
-      <p className="text-sm text-(--foreground)/70">
+      <p className="text-sm text-muted-foreground">
         Update your{' '}
-        <Link href="/account" className="underline">
+        <Link href="/account" className="font-medium text-primary underline-offset-2 hover:underline">
           display name and phone
         </Link>{' '}
         under Account.
@@ -135,25 +135,25 @@ export default function DashboardPage() {
       <OwnerBookingRequestsSection bookings={asOwner} onRespond={respondBooking} />
 
       <section className="space-y-3">
-        <h2 className="text-lg font-medium">My booking requests</h2>
+        <h2 className="text-lg font-semibold text-foreground">My booking requests</h2>
         {asGuest.length === 0 ? (
-          <p className="text-sm text-(--foreground)/65">You have not requested any stays yet.</p>
+          <p className="text-sm text-muted-foreground">You have not requested any stays yet.</p>
         ) : (
           <ul className="space-y-2">
             {asGuest.map((booking) => (
               <li
                 key={booking.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded border border-(--foreground)/15 px-3 py-2 text-sm"
+                className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-sm shadow-sm"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium">{booking.listingTitle}</p>
-                  <p className="text-xs text-(--foreground)/60">
+                  <p className="font-medium text-foreground">{booking.listingTitle}</p>
+                  <p className="text-xs text-muted-foreground">
                     {booking.status.replace(/_/g, ' ')} · {booking.requestedStart} →{' '}
                     {booking.requestedEnd}
                   </p>
                   {booking.status === 'declined' && booking.ownerDeclineMessage?.trim() ? (
-                    <p className="mt-1 text-xs text-(--foreground)/75">
-                      <span className="text-(--foreground)/50">Host note: </span>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      <span className="text-muted-foreground/80">Host note: </span>
                       {booking.ownerDeclineMessage.trim()}
                     </p>
                   ) : null}
@@ -161,7 +161,7 @@ export default function DashboardPage() {
                 {booking.status === 'pending_owner' && (
                   <button
                     type="button"
-                    className="text-xs underline"
+                    className="text-xs font-medium text-primary underline-offset-2 hover:underline"
                     onClick={() => cancelBooking(booking.id)}
                   >
                     Cancel request

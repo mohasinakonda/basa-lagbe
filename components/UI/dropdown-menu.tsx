@@ -88,7 +88,7 @@ export function DropdownMenu({
             role="menu"
             aria-labelledby={`${id}-trigger`}
             style={floatingStyles}
-            className="z-[200] min-w-[12rem] rounded-lg border border-[var(--foreground)]/15 bg-[var(--background)] py-1 shadow-lg outline-none"
+            className="z-[200] min-w-[12rem] rounded-xl border border-border bg-surface py-1 shadow-dialog outline-none"
             {...getFloatingProps()}
           >
             <DropdownMenuContext.Provider value={{ close }}>{children}</DropdownMenuContext.Provider>
@@ -107,7 +107,7 @@ type DropdownMenuItemProps = {
 }
 
 const itemClass =
-  'flex w-full cursor-pointer items-center px-3 py-2 text-left text-sm text-[var(--foreground)] hover:bg-[var(--foreground)]/10 focus:bg-[var(--foreground)]/10 focus:outline-none'
+  'flex w-full cursor-pointer items-center px-3 py-2 text-left text-sm text-foreground hover:bg-muted focus:bg-muted focus:outline-none'
 
 export function DropdownMenuItem({
   href,
@@ -140,5 +140,5 @@ export function DropdownMenuItem({
 }
 
 export function DropdownMenuSeparator() {
-  return <div className="my-1 h-px bg-[var(--foreground)]/10" role="separator" />
+  return <div className="my-1 h-px bg-border" role="separator" />
 }

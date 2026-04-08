@@ -58,17 +58,17 @@ function AuthLoginForm() {
 
   return (
     <>
-      <h1 className="mt-6 text-2xl font-semibold">
+      <h1 className="mt-6 text-2xl font-semibold tracking-tight text-foreground">
         {mode === 'signin' ? 'Sign in' : 'Create account'}
       </h1>
-      <p className="mt-2 text-sm text-(--foreground)/70">
+      <p className="mt-2 text-sm text-muted-foreground">
         {mode === 'signin'
           ? 'Use the email and password you registered with.'
           : 'Sign up to list properties and manage bookings.'}
       </p>
 
       {!configured && (
-        <p className="mt-4 rounded border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm">
+        <p className="mt-4 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-foreground">
           Set <code className="text-xs">NEXT_PUBLIC_SUPABASE_URL</code> and{' '}
           <code className="text-xs">NEXT_PUBLIC_SUPABASE_ANON_KEY</code> in{' '}
           <code className="text-xs">.env.local</code>, then restart the dev server.
@@ -118,7 +118,7 @@ function AuthLoginForm() {
         </div>
 
         {error && (
-          <p className="text-sm text-red-600" role="alert">
+          <p className="text-sm text-red-600 dark:text-red-400" role="alert">
             {error}
           </p>
         )}
@@ -126,19 +126,19 @@ function AuthLoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="rounded bg-foreground px-4 py-2 text-background hover:opacity-90 disabled:opacity-50"
+          className="rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:brightness-105 disabled:opacity-50"
         >
           {loading ? 'Please wait…' : mode === 'signin' ? 'Sign in' : 'Sign up'}
         </button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-(--foreground)/70">
+      <p className="mt-6 text-center text-sm text-muted-foreground">
         {mode === 'signin' ? (
           <>
             No account?{' '}
             <button
               type="button"
-              className="font-medium underline"
+              className="font-semibold text-primary underline-offset-2 hover:underline"
               onClick={() => setMode('signup')}
             >
               Sign up
@@ -149,7 +149,7 @@ function AuthLoginForm() {
             Already have an account?{' '}
             <button
               type="button"
-              className="font-medium underline"
+              className="font-semibold text-primary underline-offset-2 hover:underline"
               onClick={() => setMode('signin')}
             >
               Sign in
@@ -164,10 +164,13 @@ function AuthLoginForm() {
 export default function AuthLoginPage() {
   return (
     <main className="mx-auto max-w-md px-4 py-12">
-      <Link href="/" className="text-sm text-(--foreground)/80 hover:underline">
+      <Link
+        href="/"
+        className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+      >
         ← Back home
       </Link>
-      <Suspense fallback={<p className="mt-6 text-(--foreground)/70">Loading…</p>}>
+      <Suspense fallback={<p className="mt-6 text-muted-foreground">Loading…</p>}>
         <AuthLoginForm />
       </Suspense>
     </main>

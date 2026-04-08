@@ -20,6 +20,64 @@ const categoryLabel: Record<Listing['category'], string> = {
   both: 'Family or Bachelor',
 }
 
+function IconHeart({ filled, className }: { filled?: boolean; className?: string }) {
+  if (filled) {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+      </svg>
+    )
+  }
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+    </svg>
+  )
+}
+
+function IconX({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      aria-hidden
+    >
+      <path d="M18 6L6 18M6 6l12 12" />
+    </svg>
+  )
+}
+
+function IconChevronDown({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden
+    >
+      <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+const fieldClass =
+  'mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-ring'
+
 export function ListingDetailSidebar({
   listing,
   onClose,
@@ -66,8 +124,8 @@ export function ListingDetailSidebar({
   const currentPhoto = photos[photoIndex] ?? photos[0]
   const expiresLabel = listing.expiresAt
     ? new Date(listing.expiresAt).toLocaleDateString(undefined, {
-      dateStyle: 'medium',
-    })
+        dateStyle: 'medium',
+      })
     : null
 
   const canBookRemote =
@@ -104,39 +162,42 @@ export function ListingDetailSidebar({
     }
   }
 
+  const cardClass = 'rounded-2xl border border-border bg-muted/35 p-4 shadow-sm'
+
   return (
     <aside
-      className="flex h-full w-full max-w-md flex-col border-r border-[var(--foreground)]/10 bg-[var(--background)] shadow-lg md:max-w-sm"
+      className="flex h-full w-full max-w-md flex-col border-r border-border bg-surface shadow-dialog md:max-w-sm"
       role="dialog"
       aria-modal="true"
       aria-label="Listing details"
     >
-      <div className="flex items-center justify-between border-b border-[var(--foreground)]/10 p-3">
-        <h2 className="text-lg font-semibold truncate pr-2">{listing.title}</h2>
-        <div className="flex items-center gap-1 shrink-0">
+      <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-3">
+        <h2 className="truncate pr-2 text-base font-semibold leading-snug text-foreground">
+          {listing.title}
+        </h2>
+        <div className="flex shrink-0 items-center gap-0.5">
           {onToggleFavorite && (
             <button
               type="button"
               onClick={() => onToggleFavorite(listing.id)}
-              className="rounded p-2 hover:bg-(--foreground)/10 font-bold"
+              className="rounded-full p-2 text-primary transition-colors hover:bg-muted"
               aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
             >
-              <span className={isFavorite ? 'text-red-500' : 'text-(--foreground)/60'}>
-                {isFavorite ? '♥' : '♡'}
-              </span>
+              <IconHeart
+                filled={isFavorite}
+                className={`size-6 ${isFavorite ? 'text-primary' : 'text-muted-foreground'}`}
+              />
             </button>
           )}
           {onShare && (
             <DropdownMenu
               id={`listing-share-${listing.id}`}
               align="end"
-              triggerClassName="inline-flex items-center gap-0.5 rounded p-2 text-sm hover:bg-[var(--foreground)]/10"
+              triggerClassName="inline-flex items-center gap-1 rounded-full px-2.5 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
               trigger={
                 <>
                   Share
-                  <span aria-hidden className="text-(--foreground)/60">
-                    ▾
-                  </span>
+                  <IconChevronDown className="size-4 opacity-60" />
                 </>
               }
             >
@@ -156,17 +217,16 @@ export function ListingDetailSidebar({
             ref={closeButtonRef}
             type="button"
             onClick={onClose}
-            className="rounded p-2 hover:bg-(--foreground)/10"
+            className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             aria-label="Close details"
           >
-            ✕
+            <IconX className="size-5" />
           </button>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {/* Photo gallery */}
-        <div className="relative aspect-video w-full bg-(--foreground)/5">
+        <div className="relative aspect-video w-full bg-muted">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={currentPhoto}
@@ -177,7 +237,7 @@ export function ListingDetailSidebar({
             <>
               <button
                 type="button"
-                className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white hover:bg-black/70 w-12 h-12 shadow"
+                className="absolute left-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/55 text-lg text-white shadow-md backdrop-blur-sm transition hover:bg-black/70"
                 onClick={() => setPhotoIndex((i) => (i === 0 ? photos.length - 1 : i - 1))}
                 aria-label="Previous photo"
               >
@@ -185,18 +245,18 @@ export function ListingDetailSidebar({
               </button>
               <button
                 type="button"
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white hover:bg-black/70  w-12 h-12 shadow"
+                className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/55 text-lg text-white shadow-md backdrop-blur-sm transition hover:bg-black/70"
                 onClick={() => setPhotoIndex((i) => (i === photos.length - 1 ? 0 : i + 1))}
                 aria-label="Next photo"
               >
                 &#x276F;
               </button>
-              <div className="absolute bottom-2 left-1/2 flex -translate-x-1/2 gap-1">
+              <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
                 {photos.map((_, i) => (
                   <button
                     key={i}
                     type="button"
-                    className={`h-2 w-2 rounded-full ${i === photoIndex ? 'bg-white' : 'bg-white/50'}`}
+                    className={`h-2 w-2 rounded-full transition-colors ${i === photoIndex ? 'bg-white' : 'bg-white/45 hover:bg-white/70'}`}
                     onClick={() => setPhotoIndex(i)}
                     aria-label={`Photo ${i + 1}`}
                   />
@@ -206,39 +266,52 @@ export function ListingDetailSidebar({
           )}
         </div>
 
-        <div className="p-4 space-y-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xl font-bold text-foreground">
-              {listing.currency} {listing.price.toLocaleString()}/mo
+        <div className="space-y-5 p-4">
+          <div className="flex flex-wrap items-baseline gap-2">
+            <span className="text-2xl font-semibold tracking-tight text-foreground">
+              {listing.currency} {listing.price.toLocaleString()}
+              <span className="text-base font-medium text-muted-foreground">/mo</span>
             </span>
-            <span className="rounded bg-(--foreground)/10 px-2 py-0.5 text-sm">
+            <span className="rounded-full border border-border bg-muted/60 px-2.5 py-0.5 text-xs font-medium text-foreground">
               {categoryLabel[listing.category]}
             </span>
           </div>
 
-          <ul className="flex flex-wrap gap-3 text-sm text-(--foreground)/80">
-            <li><strong>{listing.bedrooms} </strong> bed</li>
-            <li><strong>{listing.bathrooms}</strong>  bath</li>
-            <li><strong>{listing.areaSqFt.toLocaleString()}</strong> <strong>sq ft</strong></li>
+          <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+            <li>
+              <span className="font-semibold text-foreground">{listing.bedrooms}</span> bed
+            </li>
+            <li>
+              <span className="font-semibold text-foreground">{listing.bathrooms}</span> bath
+            </li>
+            <li>
+              <span className="font-semibold text-foreground">{listing.areaSqFt.toLocaleString()}</span>{' '}
+              sq ft
+            </li>
           </ul>
 
-          <p className="text-sm text-(--foreground)/90">{listing.address}</p>
+          <p className="text-sm leading-relaxed text-foreground">{listing.address}</p>
           {expiresLabel && (
-            <p className="text-xs text-(--foreground)/60">
-              Listed until <span className="font-medium">{expiresLabel}</span>
+            <p className="text-xs text-muted-foreground">
+              Listed until <span className="font-medium text-foreground">{expiresLabel}</span>
             </p>
           )}
-          <h3 className="text-lg font-medium mb-1">Description</h3>
-          <p className="text-sm leading-relaxed whitespace-pre-line">{listing.description}</p>
+
+          <div>
+            <h3 className="mb-1.5 text-base font-semibold text-foreground">Description</h3>
+            <p className="text-sm leading-relaxed whitespace-pre-line text-muted-foreground">
+              {listing.description}
+            </p>
+          </div>
 
           {listing.amenities.length > 0 && (
             <div>
-              <h3 className="text-lg font-medium mb-1">Amenities</h3>
+              <h3 className="mb-2 text-base font-semibold text-foreground">Amenities</h3>
               <ul className="flex flex-wrap gap-2">
                 {listing.amenities.map((amenity) => (
                   <li
                     key={amenity}
-                    className="rounded shadow bg-(--foreground)/50 px-2 py-1 text-sm"
+                    className="rounded-full border border-border bg-muted/50 px-3 py-1.5 text-sm text-foreground"
                   >
                     {amenity}
                   </li>
@@ -247,59 +320,59 @@ export function ListingDetailSidebar({
             </div>
           )}
 
-
-
           {canBookRemote && (
-            <div className="rounded border border-(--foreground)/15 p-3">
-              <h3 className="text-sm font-medium mb-2">Request a stay</h3>
-              <p className="mb-3 text-xs text-(--foreground)/65">
+            <div className={cardClass}>
+              <h3 className="text-sm font-semibold text-foreground">Request a stay</h3>
+              <p className="mb-3 mt-1 text-xs text-muted-foreground">
                 The owner will confirm or decline your request.
               </p>
               {bookingOk ? (
-                <p className="text-sm text-green-700">Request sent. Check your dashboard for status.</p>
+                <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
+                  Request sent. Check your dashboard for status.
+                </p>
               ) : (
-                <form className="flex flex-col gap-2" onSubmit={handleBooking}>
-                  <div className="grid grid-cols-2 gap-2">
-                    <label className="text-xs text-(--foreground)/70">
+                <form className="flex flex-col gap-3" onSubmit={handleBooking}>
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className="text-xs font-medium text-muted-foreground">
                       Start
                       <input
                         type="date"
                         required
                         value={stayStart}
                         onChange={(e) => setStayStart(e.target.value)}
-                        className="mt-0.5 w-full rounded border border-(--foreground)/20 bg-background px-2 py-1.5 text-sm"
+                        className={fieldClass}
                       />
                     </label>
-                    <label className="text-xs text-(--foreground)/70">
+                    <label className="text-xs font-medium text-muted-foreground">
                       End
                       <input
                         type="date"
                         required
                         value={stayEnd}
                         onChange={(e) => setStayEnd(e.target.value)}
-                        className="mt-0.5 w-full rounded border border-(--foreground)/20 bg-background px-2 py-1.5 text-sm"
+                        className={fieldClass}
                       />
                     </label>
                   </div>
-                  <label className="text-xs text-(--foreground)/70">
+                  <label className="text-xs font-medium text-muted-foreground">
                     Message (optional)
                     <textarea
                       value={stayMessage}
                       onChange={(e) => setStayMessage(e.target.value)}
                       rows={2}
-                      className="mt-0.5 w-full rounded border border-(--foreground)/20 bg-background px-2 py-1.5 text-sm"
+                      className={fieldClass}
                       placeholder="Introduce yourself or ask a question"
                     />
                   </label>
                   {bookingError && (
-                    <p className="text-xs text-red-600" role="alert">
+                    <p className="text-xs text-red-600 dark:text-red-400" role="alert">
                       {bookingError}
                     </p>
                   )}
                   <button
                     type="submit"
                     disabled={bookingSubmitting || userId === undefined}
-                    className="rounded bg-(--foreground) px-3 py-2 text-sm font-medium text-(--background) hover:opacity-90 disabled:opacity-50"
+                    className="rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:brightness-105 disabled:opacity-50"
                   >
                     {bookingSubmitting ? 'Sending…' : 'Send request'}
                   </button>
@@ -309,36 +382,36 @@ export function ListingDetailSidebar({
           )}
 
           {supabaseConfigured && listing.ownerId != null && userId === undefined && (
-            <p className="text-xs text-(--foreground)/60">Checking sign-in…</p>
+            <p className="text-xs text-muted-foreground">Checking sign-in…</p>
           )}
 
           {supabaseConfigured && listing.ownerId != null && userId === null && (
-            <p className="text-base text-(--foreground)/80">
-              <Link href="/auth/login" className="font-medium underline">
+            <p className="text-sm text-muted-foreground">
+              <Link href="/auth/login" className="font-semibold text-primary underline-offset-2 hover:underline">
                 Sign in
               </Link>{' '}
               to request a stay for this listing.
             </p>
           )}
 
-          <div className='shadow rounded border border-(--foreground)/15 p-3'>
-            <h3 className="text-lg font-medium mb-2">Contact</h3>
+          <div className={cardClass}>
+            <h3 className="mb-3 text-base font-semibold text-foreground">Contact</h3>
             <div className="flex flex-col gap-2">
               <a
                 href={`tel:${listing.contact.phone.replace(/\s/g, '')}`}
-                className="text-sm font-bold hover:underline"
+                className="text-sm font-semibold text-foreground hover:text-primary hover:underline"
               >
                 {listing.contact.phone}
               </a>
               <a
                 href={`mailto:${listing.contact.email}`}
-                className="text-sm font-bold hover:underline"
+                className="text-sm font-semibold text-foreground hover:text-primary hover:underline"
               >
                 {listing.contact.email}
               </a>
               <a
                 href={`tel:${listing.contact.phone.replace(/\s/g, '')}`}
-                className="mt-2 inline-flex w-fit items-center justify-center rounded bg-[var(--foreground)] px-4 py-2 text-sm font-medium text-[var(--background)] hover:opacity-90"
+                className="mt-2 inline-flex w-fit items-center justify-center rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:brightness-105"
               >
                 Request to visit
               </a>

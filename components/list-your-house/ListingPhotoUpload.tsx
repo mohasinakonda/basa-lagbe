@@ -103,7 +103,7 @@ export function ListingPhotoUpload({
   return (
     <div>
       <Label>Photos</Label>
-      <p className="mt-1 mb-3 text-xs text-(--foreground)/60">
+      <p className="mt-1 mb-3 text-xs text-muted-foreground">
         Drag and drop or click to add images. They upload to ImageKit; you can delete any preview
         before submitting.
       </p>
@@ -111,8 +111,8 @@ export function ListingPhotoUpload({
       <div
         {...getRootProps({
           className: [
-            'rounded-lg border-2 border-dashed border-(--foreground)/25 bg-(--foreground)/5 px-4 py-8 text-center transition-colors outline-none focus-visible:ring-2 focus-visible:ring-(--foreground)/30',
-            isDragActive ? 'border-foreground/50 bg-(--foreground)/10' : '',
+            'rounded-lg border-2 border-dashed border-border bg-muted px-4 py-8 text-center transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring',
+            isDragActive ? 'border-foreground/50 bg-muted' : '',
             disabled ? 'pointer-events-none opacity-50' : 'cursor-pointer',
           ]
             .filter(Boolean)
@@ -120,10 +120,10 @@ export function ListingPhotoUpload({
         })}
       >
         <input {...getInputProps()} />
-        <p className="text-sm text-(--foreground)/80">
+        <p className="text-sm text-muted-foreground">
           {isDragActive ? 'Drop images here…' : 'Drag images here, or click to choose files'}
         </p>
-        <p className="mt-2 text-xs text-(--foreground)/55">PNG, JPG, WebP, GIF — multiple files ok</p>
+        <p className="mt-2 text-xs text-muted-foreground">PNG, JPG, WebP, GIF — multiple files ok</p>
       </div>
 
       {photos.length > 0 && (
@@ -133,7 +133,7 @@ export function ListingPhotoUpload({
             return (
               <li
                 key={p.id}
-                className="relative aspect-4/3 overflow-hidden rounded-md border border-(--foreground)/15 bg-(--foreground)/5"
+                className="relative aspect-4/3 overflow-hidden rounded-md border border-border bg-muted"
               >
                 {src ? (
                   <img src={src} alt="" className="h-full w-full object-cover" />
@@ -159,7 +159,7 @@ export function ListingPhotoUpload({
                   <button
                     type="button"
                     onClick={() => removePhoto(p.id)}
-                    className="absolute right-1 top-1 rounded border border-(--foreground)/30 bg-background/90 px-2 py-1 text-xs font-medium shadow-sm hover:bg-background"
+                    className="absolute right-1 top-1 rounded border border-border bg-background/90 px-2 py-1 text-xs font-medium shadow-sm hover:bg-background"
                     aria-label="Remove image"
                   >
                     Delete
@@ -172,7 +172,7 @@ export function ListingPhotoUpload({
       )}
 
       {uploadingCount > 0 && (
-        <p className="mt-2 text-xs text-(--foreground)/60">
+        <p className="mt-2 text-xs text-muted-foreground">
           Uploading {uploadingCount} image{uploadingCount === 1 ? '' : 's'}…
         </p>
       )}

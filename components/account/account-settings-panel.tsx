@@ -151,14 +151,14 @@ export function AccountSettingsPanel() {
 
   if (!configured) {
     return (
-      <p className="text-sm text-(--foreground)/80">
+      <p className="text-sm text-muted-foreground">
         Connect Supabase (see <code className="text-xs">.env.example</code>) to manage your account.
       </p>
     )
   }
 
   if (loading) {
-    return <p className="text-sm text-(--foreground)/70">Loading…</p>
+    return <p className="text-sm text-muted-foreground">Loading…</p>
   }
 
   const blockUntil = profile?.listing_creation_blocked_until ?? null
@@ -169,19 +169,19 @@ export function AccountSettingsPanel() {
     <div className="space-y-8">
       {listingBlockActive && blockUntil && (
         <section
-          className="space-y-3 rounded-lg border border-amber-600/50 bg-amber-500/10 p-4 text-(--foreground)"
+          className="space-y-3 rounded-xl border border-amber-600/50 bg-amber-500/10 p-4 text-foreground"
           role="status"
           aria-live="polite"
         >
           <h2 className="text-lg font-semibold text-amber-900 dark:text-amber-100">
             Listing creation restricted
           </h2>
-          <p className="text-sm text-(--foreground)/90">
+          <p className="text-sm text-muted-foreground">
             An administrator has limited your ability to add new property listings. Other account
             settings below are not affected.
           </p>
           {blockReason?.trim() ? (
-            <div className="rounded-md border border-(--foreground)/15 bg-background/80 px-3 py-2 text-sm">
+            <div className="rounded-md border border-border bg-background/80 px-3 py-2 text-sm">
               <span className="font-medium">Why: </span>
               {blockReason.trim()}
             </div>
@@ -190,7 +190,7 @@ export function AccountSettingsPanel() {
             <span className="font-medium">Restriction lifts: </span>
             <time dateTime={blockUntil}>{formatListingBlockRelease(blockUntil)}</time>
           </p>
-          <p className="text-sm text-(--foreground)/75">
+          <p className="text-sm text-muted-foreground">
             After that time you can submit listings again from{' '}
             <Link href="/list-your-house" className="underline hover:text-foreground">
               List your house
@@ -200,16 +200,16 @@ export function AccountSettingsPanel() {
         </section>
       )}
 
-      <section className="space-y-3 rounded border border-(--foreground)/15 p-4">
+      <section className="space-y-3 rounded border border-border p-4">
         <h2 className="text-lg font-medium">Sign-in email</h2>
-        <p className="text-sm text-(--foreground)/70">
+        <p className="text-sm text-muted-foreground">
           {email ?? '—'} (managed in your auth provider; contact support to change.)
         </p>
       </section>
 
-      <section className="space-y-3 rounded border border-(--foreground)/15 p-4">
+      <section className="space-y-3 rounded border border-border p-4">
         <h2 className="text-lg font-medium">Display name</h2>
-        <p className="text-sm text-(--foreground)/70">Shown to hosts and guests on bookings.</p>
+        <p className="text-sm text-muted-foreground">Shown to hosts and guests on bookings.</p>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
           <div className="flex-1">
             <Label htmlFor="displayName">Name</Label>
@@ -226,17 +226,17 @@ export function AccountSettingsPanel() {
             type="button"
             disabled={nameBusy}
             onClick={() => void saveDisplayName()}
-            className="rounded bg-foreground px-4 py-2 text-sm text-background hover:opacity-90 disabled:opacity-50"
+            className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:brightness-105 disabled:opacity-50"
           >
             Save
           </button>
         </div>
-        {nameMsg && <p className="text-sm text-(--foreground)/80">{nameMsg}</p>}
+        {nameMsg && <p className="text-sm text-muted-foreground">{nameMsg}</p>}
       </section>
 
-      <section className="space-y-3 rounded border border-(--foreground)/15 p-4">
+      <section className="space-y-3 rounded border border-border p-4">
         <h2 className="text-lg font-medium">Your address</h2>
-        <p className="text-sm text-(--foreground)/70">
+        <p className="text-sm text-muted-foreground">
           Optional. Hosts see this when you request a booking so they know how to reach you.
         </p>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
@@ -248,22 +248,22 @@ export function AccountSettingsPanel() {
               value={contactAddress}
               onChange={(e) => setContactAddress(e.target.value)}
               placeholder="Area, city, etc."
-              className="w-full rounded border border-(--foreground)/20 bg-background px-2 py-1.5 text-sm outline-none focus:border-(--foreground)/40"
+              className="w-full rounded border border-border bg-background px-2 py-1.5 text-sm outline-none focus:border-border"
             />
           </div>
           <button
             type="button"
             disabled={addressBusy}
             onClick={() => void saveContactAddress()}
-            className="rounded bg-foreground px-4 py-2 text-sm text-background hover:opacity-90 disabled:opacity-50"
+            className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:brightness-105 disabled:opacity-50"
           >
             Save
           </button>
         </div>
-        {addressMsg && <p className="text-sm text-(--foreground)/80">{addressMsg}</p>}
+        {addressMsg && <p className="text-sm text-muted-foreground">{addressMsg}</p>}
       </section>
 
-      <section className="space-y-3 rounded border border-(--foreground)/15 p-4">
+      <section className="space-y-3 rounded border border-border p-4">
         <h2 className="text-lg font-medium">Phone verification</h2>
         {profile?.phone_verified_at ? (
           <p className="text-sm text-green-800 dark:text-green-400">
@@ -271,7 +271,7 @@ export function AccountSettingsPanel() {
           </p>
         ) : (
           <>
-            <p className="text-sm text-(--foreground)/70">
+            <p className="text-sm text-muted-foreground">
               Add your mobile number. We send a one-time code via SMS (Twilio Verify must be configured
               on the server).
             </p>
@@ -290,7 +290,7 @@ export function AccountSettingsPanel() {
                 type="button"
                 disabled={phoneBusy}
                 onClick={() => void sendCode()}
-                className="rounded border border-(--foreground)/20 px-4 py-2 text-sm hover:bg-(--foreground)/10 disabled:opacity-50"
+                className="rounded border border-border px-4 py-2 text-sm hover:bg-muted disabled:opacity-50"
               >
                 Send code
               </button>
@@ -311,14 +311,14 @@ export function AccountSettingsPanel() {
                 type="button"
                 disabled={phoneBusy}
                 onClick={() => void verifyCode()}
-                className="rounded bg-foreground px-4 py-2 text-sm text-background hover:opacity-90 disabled:opacity-50"
+                className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:brightness-105 disabled:opacity-50"
               >
                 Verify
               </button>
             </div>
           </>
         )}
-        {phoneMsg && <p className="text-sm text-(--foreground)/80">{phoneMsg}</p>}
+        {phoneMsg && <p className="text-sm text-muted-foreground">{phoneMsg}</p>}
       </section>
     </div>
   )

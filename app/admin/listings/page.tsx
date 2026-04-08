@@ -94,13 +94,13 @@ export default function AdminListingsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1 text-sm">
-          <span className="text-(--foreground)/65">Status</span>
+          <span className="text-muted-foreground">Status</span>
           <select
             value={status}
             onChange={(e) => {
               setStatus(e.target.value)
             }}
-            className="rounded border border-(--foreground)/20 bg-transparent px-2 py-1.5 text-sm"
+            className="rounded border border-border bg-transparent px-2 py-1.5 text-sm"
           >
             <option value="">All</option>
             <option value="published">Published</option>
@@ -116,24 +116,24 @@ export default function AdminListingsPage() {
           }}
         >
           <label className="flex flex-col gap-1 text-sm">
-            <span className="text-(--foreground)/65">Title contains</span>
+            <span className="text-muted-foreground">Title contains</span>
             <input
               value={titleQ}
               onChange={(e) => setTitleQ(e.target.value)}
-              className="rounded border border-(--foreground)/20 bg-transparent px-2 py-1.5 text-sm"
+              className="rounded border border-border bg-transparent px-2 py-1.5 text-sm"
             />
           </label>
           <button
             type="submit"
-            className="rounded bg-foreground px-3 py-1.5 text-sm text-background hover:opacity-90"
+            className="rounded-xl bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground transition hover:brightness-105"
           >
             Filter
           </button>
         </form>
-        <p className="text-sm text-(--foreground)/60">{total} listing(s)</p>
+        <p className="text-sm text-muted-foreground">{total} listing(s)</p>
       </div>
 
-      {loading && <p className="text-sm text-(--foreground)/70">Loading…</p>}
+      {loading && <p className="text-sm text-muted-foreground">Loading…</p>}
       {error && (
         <p className="text-sm text-red-600 dark:text-red-400">
           {error}{' '}
@@ -144,10 +144,10 @@ export default function AdminListingsPage() {
       )}
 
       {!loading && !error && (
-        <div className="overflow-x-auto rounded border border-(--foreground)/15">
+        <div className="overflow-x-auto rounded border border-border">
           <table className="w-full min-w-[800px] border-collapse text-left text-sm">
             <thead>
-              <tr className="border-b border-(--foreground)/15 bg-(--foreground)/[0.04]">
+              <tr className="border-b border-border bg-muted/50">
                 <th className="p-2 font-medium">Title</th>
                 <th className="p-2 font-medium">Owner</th>
                 <th className="p-2 font-medium">Status</th>
@@ -157,10 +157,10 @@ export default function AdminListingsPage() {
             </thead>
             <tbody>
               {rows.map(({ listing: l, impressionCount, ownerDisplayName }) => (
-                <tr key={l.id} className="border-b border-(--foreground)/10">
+                <tr key={l.id} className="border-b border-border">
                   <td className="p-2">
                     <span className="font-medium">{l.title}</span>
-                    <div className="font-mono text-[10px] text-(--foreground)/45">{l.id}</div>
+                    <div className="font-mono text-[10px] text-muted-foreground">{l.id}</div>
                   </td>
                   <td className="p-2 text-xs">{ownerDisplayName ?? l.ownerId ?? '—'}</td>
                   <td className="p-2">{l.publicationStatus ?? '—'}</td>

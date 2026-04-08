@@ -95,7 +95,7 @@ export function LocationPickerMap({ value, onChange, required }: LocationPickerM
 
   if (!apiKey) {
     return (
-      <div className="flex h-64 items-center justify-center rounded border border-[var(--foreground)]/20 bg-[var(--foreground)]/5 text-sm text-[var(--foreground)]/70">
+      <div className="flex h-64 items-center justify-center rounded-xl border border-border bg-muted/50 text-sm text-muted-foreground">
         Set NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to show the map.
       </div>
     )
@@ -103,7 +103,7 @@ export function LocationPickerMap({ value, onChange, required }: LocationPickerM
 
   if (!isLoaded) {
     return (
-      <div className="flex h-64 items-center justify-center rounded border border-[var(--foreground)]/20 bg-[var(--foreground)]/5 text-sm text-[var(--foreground)]/70">
+      <div className="flex h-64 items-center justify-center rounded-xl border border-border bg-muted/50 text-sm text-muted-foreground">
         Loading map…
       </div>
     )
@@ -112,14 +112,14 @@ export function LocationPickerMap({ value, onChange, required }: LocationPickerM
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="text-sm font-medium text-[var(--foreground)]/80">
+        <span className="text-sm font-medium text-foreground">
           Property location {required ? '*' : ''}
         </span>
         <button
           type="button"
           onClick={getCurrentLocation}
           disabled={isLocating}
-          className="flex items-center gap-2 rounded border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-2 text-sm font-medium hover:bg-[var(--foreground)]/10 disabled:opacity-50"
+          className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted disabled:opacity-50"
         >
           {isLocating ? (
             'Getting location…'
@@ -135,10 +135,10 @@ export function LocationPickerMap({ value, onChange, required }: LocationPickerM
           {locError}
         </p>
       )}
-      <p className="text-xs text-[var(--foreground)]/60">
+      <p className="text-xs text-muted-foreground">
         Click on the map or drag the marker to set your property location.
       </p>
-      <div className="h-64 w-full overflow-hidden rounded border border-[var(--foreground)]/20">
+      <div className="h-64 w-full overflow-hidden rounded-xl border border-border shadow-sm">
         <GoogleMap
           mapContainerStyle={MAP_CONTAINER_STYLE}
           center={position}

@@ -64,7 +64,7 @@ export function Tooltip({
             id={labelId}
             role="tooltip"
             style={floatingStyles}
-            className="z-[250] max-w-xs rounded-md border border-[var(--foreground)]/15 bg-[var(--foreground)] px-2 py-1.5 text-xs text-[var(--background)] shadow-md"
+            className="z-[250] max-w-xs rounded-lg border border-border bg-foreground px-2 py-1.5 text-xs text-background shadow-card"
             {...getFloatingProps()}
           >
             {content}

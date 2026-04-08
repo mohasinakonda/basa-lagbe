@@ -31,6 +31,12 @@ export type FloatingSelectProps<T extends string> = {
   id?: string
 }
 
+const triggerBase =
+  'flex min-w-[7rem] items-center justify-between gap-2 rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+
+const listboxBase =
+  'z-[150] max-h-60 overflow-auto rounded-xl border border-border bg-surface py-1 text-foreground shadow-dialog outline-none'
+
 export function FloatingSelect<T extends string>({
   value,
   onChange,
@@ -83,11 +89,11 @@ export function FloatingSelect<T extends string>({
         aria-expanded={open}
         aria-controls={listboxId}
         aria-label={ariaLabel}
-        className={`flex min-w-[7rem] items-center justify-between gap-2 rounded border border-[var(--foreground)]/25 bg-[var(--background)] px-3 py-1.5 text-sm text-[var(--foreground)] hover:bg-[var(--foreground)]/5 ${buttonClassName}`}
+        className={`${triggerBase} ${buttonClassName}`}
         {...getReferenceProps()}
       >
         <span>{selected?.label ?? value}</span>
-        <span aria-hidden className="text-[var(--foreground)]/50">
+        <span aria-hidden className="text-muted-foreground">
           ▾
         </span>
       </button>
@@ -100,7 +106,7 @@ export function FloatingSelect<T extends string>({
               role="listbox"
               aria-labelledby={id}
               style={floatingStyles}
-              className="z-[150] max-h-60 overflow-auto rounded-md border border-[var(--foreground)]/25 bg-[var(--background)] py-1 text-[var(--foreground)] shadow-lg outline-none"
+              className={listboxBase}
               {...getFloatingProps()}
             >
               {options.map((opt) => (
@@ -108,8 +114,8 @@ export function FloatingSelect<T extends string>({
                   key={String(opt.value)}
                   role="option"
                   aria-selected={opt.value === value}
-                  className={`cursor-pointer px-3 py-2 text-sm text-[var(--foreground)] outline-none hover:bg-[var(--foreground)]/10 ${
-                    opt.value === value ? 'bg-[var(--foreground)]/15 font-medium' : ''
+                  className={`cursor-pointer px-3 py-2 text-sm text-foreground outline-none hover:bg-muted ${
+                    opt.value === value ? 'bg-muted font-medium' : ''
                   }`}
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => selectOption(opt.value)}

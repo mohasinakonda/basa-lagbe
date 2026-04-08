@@ -66,10 +66,17 @@ export function ListingFiltersForm({
     variant === 'sheet' ? 'flex flex-col gap-4' : 'flex flex-wrap items-center gap-3'
   const labelClass =
     variant === 'sheet'
-      ? 'text-sm font-medium text-[var(--foreground)]'
-      : 'text-sm font-medium text-[var(--foreground)]/80'
+      ? 'text-sm font-medium text-foreground'
+      : 'text-sm font-medium text-muted-foreground'
   const fieldClass =
-    'rounded border border-[var(--foreground)]/25 bg-[var(--background)] px-2 py-1.5 text-sm text-[var(--foreground)] placeholder:text-[var(--foreground)]/50'
+    'rounded-xl border border-border bg-background px-2.5 py-1.5 text-sm text-foreground shadow-sm placeholder:text-muted-foreground focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-ring'
+
+  const locBtn = (active: boolean) =>
+    `rounded-lg px-3 py-1.5 text-sm transition-colors disabled:opacity-50 ${
+      active
+        ? 'bg-surface font-medium text-foreground shadow-sm'
+        : 'text-muted-foreground hover:bg-surface/80 hover:text-foreground'
+    }`
 
   return (
     <div className={outer}>
@@ -82,6 +89,7 @@ export function ListingFiltersForm({
                 checked={showOnlyFavorites}
                 onChange={(e) => onShowOnlyFavoritesChange(e.target.checked)}
                 aria-label="Show only saved listings"
+                className="size-4 rounded border-border text-primary focus:ring-ring"
               />
               <span className={labelClass}>
                 Saved{favoritesCount > 0 ? ` (${favoritesCount})` : ''}
@@ -108,11 +116,11 @@ export function ListingFiltersForm({
           placement="bottom"
           delay={400}
         >
-          <div className="flex overflow-hidden rounded border border-[var(--foreground)]/25">
+          <div className="inline-flex rounded-xl border border-border bg-muted/60 p-0.5">
             <button
               type="button"
               onClick={() => onLocationFilterChange('all')}
-              className={`px-3 py-1.5 text-sm text-[var(--foreground)] ${locationFilter === 'all' ? 'bg-[var(--foreground)]/22 font-medium' : 'hover:bg-[var(--foreground)]/8'}`}
+              className={locBtn(locationFilter === 'all')}
             >
               All areas
             </button>
@@ -120,7 +128,7 @@ export function ListingFiltersForm({
               type="button"
               onClick={() => onLocationFilterChange('near_me')}
               disabled={isLocating}
-              className={`px-3 py-1.5 text-sm text-[var(--foreground)] disabled:opacity-50 ${locationFilter === 'near_me' ? 'bg-[var(--foreground)]/22 font-medium' : 'hover:bg-[var(--foreground)]/8'}`}
+              className={locBtn(locationFilter === 'near_me')}
             >
               {isLocating ? 'Getting location…' : 'Near me'}
             </button>
@@ -139,7 +147,7 @@ export function ListingFiltersForm({
             className={`w-24 ${fieldClass}`}
             aria-label="Minimum price"
           />
-          <span className="text-[var(--foreground)]/55">–</span>
+          <span className="text-muted-foreground">–</span>
           <input
             type="number"
             placeholder="Max"

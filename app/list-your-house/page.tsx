@@ -183,30 +183,30 @@ export default function ListYourHousePage() {
   return (
     <main className="mx-auto max-w-2xl px-4 py-8">
       <div className="mb-6 flex items-center gap-4">
-        <Link href="/" className="text-(--foreground)/80 hover:underline">
+        <Link href="/" className="text-muted-foreground hover:underline">
           ← Back
         </Link>
-        <h1 className="text-2xl font-semibold">List your house</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">List your house</h1>
       </div>
 
       {showModerationLoading && (
-        <p className="mb-6 text-sm text-(--foreground)/70">Checking your account…</p>
+        <p className="mb-6 text-sm text-muted-foreground">Checking your account…</p>
       )}
 
       {showBlockedPanel && moderation.untilIso && (
         <div
-          className="mb-8 rounded-lg border border-amber-600/50 bg-amber-500/10 px-5 py-6 text-(--foreground)"
+          className="mb-8 rounded-xl border border-amber-600/50 bg-amber-500/10 px-5 py-6 text-foreground"
           role="alert"
         >
           <h2 className="text-lg font-semibold text-amber-900 dark:text-amber-100">
             Listing creation is restricted
           </h2>
-          <p className="mt-2 text-sm text-(--foreground)/90">
+          <p className="mt-2 text-sm text-muted-foreground">
             An administrator has temporarily blocked new listings on your account. You cannot submit a
             listing until the restriction ends.
           </p>
           {moderation.reason ? (
-            <p className="mt-4 rounded-md border border-(--foreground)/15 bg-background/80 px-3 py-2 text-sm">
+            <p className="mt-4 rounded-md border border-border bg-background/80 px-3 py-2 text-sm">
               <span className="font-medium">Reason: </span>
               {moderation.reason}
             </p>
@@ -217,7 +217,7 @@ export default function ListYourHousePage() {
           </p>
           <Link
             href="/"
-            className="mt-6 inline-block rounded border border-(--foreground)/25 px-4 py-2 text-sm font-medium hover:bg-(--foreground)/10"
+            className="mt-6 inline-block rounded border border-border px-4 py-2 text-sm font-medium hover:bg-muted"
           >
             Back to home
           </Link>
@@ -243,7 +243,7 @@ export default function ListYourHousePage() {
 
           <div>
             <Label htmlFor="description" required>
-              Description *
+              Description
             </Label>
             <textarea
               id="description"
@@ -251,18 +251,18 @@ export default function ListYourHousePage() {
               rows={4}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full rounded border border-(--foreground)/20 bg-background px-3 py-2"
+              className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm placeholder:text-muted-foreground focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Describe the property..."
             />
           </div>
 
           <div>
-            <Label required>Category </Label>
+            <Label required>Category</Label>
             <div className="flex gap-4">
               {CATEGORIES.map((opt) => (
-                <label key={opt.value} className="flex items-center gap-2">
+                <label key={opt.value} className="flex items-center gap-2 text-sm text-foreground">
                   <input
-                    className='w-4 h-4 accent-foreground'
+                    className="h-4 w-4 accent-primary"
                     type="radio"
                     name="category"
                     value={opt.value}
@@ -300,7 +300,7 @@ export default function ListYourHousePage() {
               min={new Date().toISOString().slice(0, 10)}
               onChange={(e) => setExpiresDate(e.target.value)}
             />
-            <p className="mt-1 text-xs text-(--foreground)/60">
+            <p className="mt-1 text-xs text-muted-foreground">
               After this date the listing is hidden from the public map until you extend it.
             </p>
           </div>
@@ -340,7 +340,7 @@ export default function ListYourHousePage() {
                 required
                 value={bedrooms}
                 onChange={(e) => setBedrooms(e.target.value)}
-                className="w-full rounded border border-(--foreground)/20 bg-background px-3 py-2"
+                className="w-full rounded border border-border bg-background px-3 py-2"
               >
                 <option value="" disabled>
                   Select
@@ -361,7 +361,7 @@ export default function ListYourHousePage() {
                 required
                 value={bathrooms}
                 onChange={(e) => setBathrooms(e.target.value)}
-                className="w-full rounded border border-(--foreground)/20 bg-background px-3 py-2"
+                className="w-full rounded border border-border bg-background px-3 py-2"
               >
                 <option value="" disabled>
                   Select
@@ -458,13 +458,13 @@ export default function ListYourHousePage() {
                 moderation.blocked ||
                 (supabaseConfigured && !userId)
               }
-              className="rounded bg-foreground px-6 py-2 text-background hover:opacity-90 disabled:opacity-50"
+              className="rounded-xl bg-primary px-6 py-2.5 font-semibold text-primary-foreground transition hover:brightness-105 disabled:opacity-50"
             >
               {submitting ? 'Saving…' : 'Submit listing'}
             </button>
             <Link
               href="/"
-              className="rounded border border-(--foreground)/20 px-6 py-2 hover:bg-(--foreground)/10"
+              className="rounded border border-border px-6 py-2 hover:bg-muted"
             >
               Cancel
             </Link>

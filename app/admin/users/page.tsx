@@ -113,27 +113,27 @@ export default function AdminUsersPage() {
           }}
         >
           <label className="flex flex-col gap-1 text-sm">
-            <span className="text-(--foreground)/65">Search name or user id</span>
+            <span className="text-muted-foreground">Search name or user id</span>
             <input
               name="q"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="rounded border border-(--foreground)/20 bg-transparent px-2 py-1.5 text-sm"
+              className="rounded border border-border bg-transparent px-2 py-1.5 text-sm"
             />
           </label>
           <button
             type="submit"
-            className="rounded bg-foreground px-3 py-1.5 text-sm text-background hover:opacity-90"
+            className="rounded-xl bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground transition hover:brightness-105"
           >
             Search
           </button>
         </form>
-        <p className="text-sm text-(--foreground)/60">
+        <p className="text-sm text-muted-foreground">
           {total} user{total !== 1 ? 's' : ''}
         </p>
       </div>
 
-      {loading && <p className="text-sm text-(--foreground)/70">Loading…</p>}
+      {loading && <p className="text-sm text-muted-foreground">Loading…</p>}
       {error && (
         <p className="text-sm text-red-600 dark:text-red-400">
           {error}{' '}
@@ -144,10 +144,10 @@ export default function AdminUsersPage() {
       )}
 
       {!loading && !error && (
-        <div className="overflow-x-auto rounded border border-(--foreground)/15">
+        <div className="overflow-x-auto rounded border border-border">
           <table className="w-full min-w-[720px] border-collapse text-left text-sm">
             <thead>
-              <tr className="border-b border-(--foreground)/15 bg-(--foreground)/[0.04]">
+              <tr className="border-b border-border bg-muted/50">
                 <th className="p-2 font-medium">Email</th>
                 <th className="p-2 font-medium">Name</th>
                 <th className="p-2 font-medium">Role</th>
@@ -157,29 +157,29 @@ export default function AdminUsersPage() {
             </thead>
             <tbody>
               {users.map((u) => (
-                <tr key={u.id} className="border-b border-(--foreground)/10 align-top">
+                <tr key={u.id} className="border-b border-border align-top">
                   <td className="p-2">
                     <span className="break-all">{u.email ?? '—'}</span>
-                    <div className="mt-0.5 font-mono text-[10px] text-(--foreground)/45">{u.id}</div>
+                    <div className="mt-0.5 font-mono text-[10px] text-muted-foreground">{u.id}</div>
                   </td>
                   <td className="p-2">{u.displayName ?? '—'}</td>
                   <td className="p-2">
                     <select
                       value={u.role}
                       onChange={(e) => onRoleChange(u.id, e.target.value)}
-                      className="max-w-[120px] rounded border border-(--foreground)/20 bg-transparent px-1 py-1 text-xs"
+                      className="max-w-[120px] rounded border border-border bg-transparent px-1 py-1 text-xs"
                     >
                       <option value="user">user</option>
                       <option value="landlord">landlord</option>
                       <option value="admin">admin</option>
                     </select>
                   </td>
-                  <td className="p-2 text-xs text-(--foreground)/75">
+                  <td className="p-2 text-xs text-muted-foreground">
                     {u.listingCreationBlockedUntil ? (
                       <>
                         Until {new Date(u.listingCreationBlockedUntil).toLocaleString()}
                         {u.listingCreationBlockReason && (
-                          <div className="mt-1 text-(--foreground)/55">{u.listingCreationBlockReason}</div>
+                          <div className="mt-1 text-muted-foreground">{u.listingCreationBlockReason}</div>
                         )}
                       </>
                     ) : (
@@ -202,17 +202,17 @@ export default function AdminUsersPage() {
                         Clear block
                       </button>
                     )}
-                    <form onSubmit={onSubmitBlock} className="mt-2 space-y-1 border-t border-(--foreground)/10 pt-2">
+                    <form onSubmit={onSubmitBlock} className="mt-2 space-y-1 border-t border-border pt-2">
                       <input type="hidden" name="userId" value={u.id} />
                       <input
                         type="datetime-local"
                         name="until"
-                        className="w-full max-w-[200px] rounded border border-(--foreground)/20 bg-transparent px-1 py-1 text-xs"
+                        className="w-full max-w-[200px] rounded border border-border bg-transparent px-1 py-1 text-xs"
                       />
                       <input
                         name="reason"
                         placeholder="Reason (optional)"
-                        className="w-full max-w-[200px] rounded border border-(--foreground)/20 bg-transparent px-1 py-1 text-xs"
+                        className="w-full max-w-[200px] rounded border border-border bg-transparent px-1 py-1 text-xs"
                       />
                       <button type="submit" className="block text-xs underline">
                         Block new listings
@@ -226,7 +226,7 @@ export default function AdminUsersPage() {
         </div>
       )}
 
-      {!loading && !error && users.length === 0 && <p className="text-sm text-(--foreground)/65">No users.</p>}
+      {!loading && !error && users.length === 0 && <p className="text-sm text-muted-foreground">No users.</p>}
 
       {!loading && !error && total > nextOffset && (
         <button

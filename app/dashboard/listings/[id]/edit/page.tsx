@@ -162,7 +162,7 @@ export default function EditListingPage() {
   if (loading) {
     return (
       <main className="mx-auto max-w-2xl px-4 py-8">
-        <p className="text-(--foreground)/70">Loading listing…</p>
+        <p className="text-muted-foreground">Loading listing…</p>
       </main>
     )
   }
@@ -170,7 +170,7 @@ export default function EditListingPage() {
   return (
     <main className="mx-auto max-w-2xl px-4 py-8">
       <div className="mb-6 flex items-center gap-4">
-        <Link href="/dashboard" className="text-(--foreground)/80 hover:underline">
+        <Link href="/dashboard" className="text-muted-foreground hover:underline">
           ← Dashboard
         </Link>
         <h1 className="text-2xl font-semibold">Edit listing</h1>
@@ -206,7 +206,7 @@ export default function EditListingPage() {
             rows={4}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full rounded border border-(--foreground)/20 bg-background px-3 py-2"
+            className="w-full rounded border border-border bg-background px-3 py-2"
           />
         </div>
 
@@ -260,7 +260,7 @@ export default function EditListingPage() {
             onChange={(e) =>
               setStatus(e.target.value as Listing['publicationStatus'])
             }
-            className="mt-1 w-full rounded border border-(--foreground)/20 bg-background px-3 py-2"
+            className="mt-1 w-full rounded border border-border bg-background px-3 py-2"
           >
             <option value="draft">Draft (only you)</option>
             <option value="published">Published (on map)</option>
@@ -337,7 +337,7 @@ export default function EditListingPage() {
                 <button
                   type="button"
                   onClick={() => removePhotoField(i)}
-                  className="rounded border border-(--foreground)/20 px-3 py-2 hover:bg-(--foreground)/10"
+                  className="rounded border border-border px-3 py-2 hover:bg-muted"
                 >
                   Remove
                 </button>
@@ -346,7 +346,7 @@ export default function EditListingPage() {
             <button
               type="button"
               onClick={addPhotoField}
-              className="w-fit rounded border border-(--foreground)/20 px-3 py-2 hover:bg-(--foreground)/10"
+              className="w-fit rounded border border-border px-3 py-2 hover:bg-muted"
             >
               Add photo URL
             </button>
@@ -401,13 +401,13 @@ export default function EditListingPage() {
           <button
             type="submit"
             disabled={saving}
-            className="rounded bg-foreground px-6 py-2 text-background hover:opacity-90 disabled:opacity-50"
+            className="rounded-xl bg-primary px-6 py-2 font-semibold text-primary-foreground transition hover:brightness-105 disabled:opacity-50"
           >
             {saving ? 'Saving…' : 'Save changes'}
           </button>
           <Link
             href="/dashboard"
-            className="rounded border border-(--foreground)/20 px-6 py-2 hover:bg-(--foreground)/10"
+            className="rounded border border-border px-6 py-2 hover:bg-muted"
           >
             Cancel
           </Link>

@@ -35,8 +35,8 @@ function setFavoritesStorage(ids: Set<string>) {
 
 function HomeFallback() {
   return (
-    <main className="flex h-[calc(100vh-5rem)] flex-col">
-      <div className="flex flex-1 items-center justify-center text-(--foreground)/70">
+    <main className="flex h-[calc(100vh-4.25rem)] flex-col">
+      <div className="flex flex-1 items-center justify-center text-muted-foreground">
         Loading…
       </div>
     </main>
@@ -295,8 +295,8 @@ function HomeContent() {
   }
 
   return (
-    <main className="flex h-[calc(100vh-5rem)] flex-col">
-      <div className="flex items-center gap-2 border-b border-[var(--foreground)]/10 bg-[var(--background)] px-3 py-2 md:hidden">
+    <main className="flex h-[calc(100vh-4.25rem)] flex-col">
+      <div className="flex items-center gap-2 border-b border-border bg-surface px-3 py-2.5 shadow-[inset_0_-1px_0_rgb(0_0_0/0.04)] md:hidden">
         <label htmlFor="filter-search-mobile" className="sr-only">
           Search listings
         </label>
@@ -306,18 +306,18 @@ function HomeContent() {
           placeholder="Search title, address…"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="min-w-0 flex-1 rounded border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-2 text-sm"
+          className="h-10 min-w-0 flex-1 rounded-full border border-border bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground shadow-sm focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-ring"
           autoComplete="off"
         />
         <button
           type="button"
-          className="shrink-0 rounded border border-[var(--foreground)]/25 bg-[var(--foreground)]/5 px-3 py-2 text-sm font-medium"
+          className="h-10 shrink-0 rounded-full border border-border bg-muted/60 px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted"
           onClick={() => setFilterSheetOpen(true)}
         >
           Filters
         </button>
         {favorites.size > 0 && (
-          <span className="shrink-0 text-xs text-[var(--foreground)]/60" aria-live="polite">
+          <span className="shrink-0 text-xs text-muted-foreground" aria-live="polite">
             Saved {favorites.size}
           </span>
         )}

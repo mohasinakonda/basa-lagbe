@@ -57,25 +57,22 @@ function ListingCard({
     setDotIndex(i)
   }, [photos.length])
 
-  const goPhoto = useCallback(
-    (dir: -1 | 1) => {
-      const el = scrollRef.current
-      if (!el) return
-      const w = el.clientWidth
-      el.scrollBy({ left: dir * w, behavior: 'smooth' })
-    },
-    []
-  )
+  const goPhoto = useCallback((dir: -1 | 1) => {
+    const el = scrollRef.current
+    if (!el) return
+    const w = el.clientWidth
+    el.scrollBy({ left: dir * w, behavior: 'smooth' })
+  }, [])
 
   const mapsUrl = `https://www.google.com/maps?q=${listing.lat},${listing.lng}`
 
   return (
     <article
-      className={`overflow-hidden rounded-lg border bg-[var(--background)] shadow-sm transition-colors ${
-        selected ? 'border-[var(--foreground)] ring-2 ring-[var(--foreground)]/20' : 'border-[var(--foreground)]/15'
+      className={`group overflow-hidden rounded-2xl border bg-surface shadow-card transition-shadow duration-200 hover:shadow-card-hover ${
+        selected ? 'border-primary/45 ring-2 ring-primary/25' : 'border-border'
       }`}
     >
-      <div className="relative aspect-[16/10] w-full bg-[var(--foreground)]/5">
+      <div className="relative aspect-[16/10] w-full overflow-hidden bg-muted">
         <div
           ref={scrollRef}
           onScroll={onGalleryScroll}
@@ -88,7 +85,7 @@ function ListingCard({
               key={`${listing.id}-${i}`}
               src={src}
               alt=""
-              className="h-full w-full shrink-0 snap-center object-cover"
+              className="h-full w-full shrink-0 snap-center object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03]"
               draggable={false}
             />
           ))}
@@ -97,7 +94,7 @@ function ListingCard({
           <>
             <button
               type="button"
-              className="absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/45 px-2 py-1 text-sm text-white backdrop-blur-sm"
+              className="absolute left-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-lg font-medium text-foreground shadow-md backdrop-blur-sm transition hover:bg-white"
               aria-label="Previous photo"
               onClick={(e) => {
                 e.stopPropagation()
@@ -108,7 +105,7 @@ function ListingCard({
             </button>
             <button
               type="button"
-              className="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/45 px-2 py-1 text-sm text-white backdrop-blur-sm"
+              className="absolute right-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-lg font-medium text-foreground shadow-md backdrop-blur-sm transition hover:bg-white"
               aria-label="Next photo"
               onClick={(e) => {
                 e.stopPropagation()
@@ -132,34 +129,34 @@ function ListingCard({
 
       <button
         type="button"
-        className="w-full px-3 pb-3 pt-2 text-left"
+        className="w-full px-4 pb-3 pt-3 text-left"
         onClick={onSelect}
         aria-label={`View ${listing.title}`}
       >
-        <p className="line-clamp-1 text-sm font-semibold text-[var(--foreground)]">{listing.title}</p>
-        <p className="mt-0.5 text-lg font-bold text-[var(--foreground)]">{formatPriceLine(listing)}</p>
-        <p className="mt-1 text-xs text-[var(--foreground)]/70">
-          {listing.bedrooms} bed · {listing.bathrooms} bath
-          {dist != null && (
-            <span className="text-[var(--foreground)]/60"> · ~{dist.toFixed(1)} km away</span>
-          )}
+        <p className="line-clamp-1 text-[15px] font-medium text-foreground">{listing.title}</p>
+        <p className="mt-1 text-lg font-semibold tracking-tight text-foreground">
+          {formatPriceLine(listing)}
         </p>
-        <p className="mt-1 line-clamp-2 text-xs text-[var(--foreground)]/65">{listing.address.trim()}</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {listing.bedrooms} bed · {listing.bathrooms} bath
+          {dist != null && <span> · ~{dist.toFixed(1)} km away</span>}
+        </p>
+        <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{listing.address.trim()}</p>
       </button>
 
-      <div className="flex flex-wrap gap-2 border-t border-[var(--foreground)]/10 px-3 py-2">
+      <div className="flex flex-wrap gap-3 border-t border-border px-4 py-2.5">
         <a
           href={mapsUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs font-medium text-[var(--foreground)]/80 underline-offset-2 hover:underline"
+          className="text-xs font-semibold text-foreground underline-offset-2 hover:underline"
           onClick={(e) => e.stopPropagation()}
         >
           Directions
         </a>
         <button
           type="button"
-          className="text-xs font-medium text-[var(--foreground)]/80 underline-offset-2 hover:underline"
+          className="text-xs font-semibold text-foreground underline-offset-2 hover:underline"
           onClick={(e) => {
             e.stopPropagation()
             onSelect()
@@ -203,8 +200,8 @@ export function ListingsList({
 
   return (
     <div className={`flex min-h-0 flex-1 flex-col ${className}`}>
-      <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-[var(--foreground)]/10 bg-[var(--background)] px-3 py-2">
-        <span className="text-xs font-medium text-[var(--foreground)]/70">Sort</span>
+      <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-border bg-surface px-3 py-2.5">
+        <span className="text-xs font-medium text-muted-foreground">Sort</span>
         <ListingSortSelect
           id="listings-sort-mobile"
           className="min-w-0 flex-1"
@@ -212,16 +209,16 @@ export function ListingsList({
           onChange={onSortModeChange}
           canSortByDistance={canSortByDistance}
         />
-        <span className="text-xs text-[var(--foreground)]/55">{listings.length} found</span>
+        <span className="text-xs text-muted-foreground">{listings.length} found</span>
       </div>
 
       <ul
         ref={setScrollRoot}
-        className="min-h-0 flex-1 list-none space-y-3 overflow-y-auto px-3 py-3"
+        className="min-h-0 flex-1 list-none space-y-4 overflow-y-auto px-3 py-4"
         aria-label="Property listings"
       >
         {slice.length === 0 && (
-          <li className="rounded-lg border border-dashed border-[var(--foreground)]/20 px-4 py-8 text-center text-sm text-[var(--foreground)]/60">
+          <li className="rounded-2xl border border-dashed border-border bg-muted/40 px-4 py-10 text-center text-sm text-muted-foreground">
             No listings match your search and filters.
           </li>
         )}

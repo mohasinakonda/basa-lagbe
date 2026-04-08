@@ -67,25 +67,25 @@ export function OwnerBookingRequestsSection({ bookings, onRespond }: OwnerBookin
   return (
     <section className="space-y-3">
       <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
-        <h2 className="text-lg font-medium">Booking requests on my listings</h2>
-        <p className="text-xs text-(--foreground)/55">
+        <h2 className="text-lg font-semibold text-foreground">Booking requests on my listings</h2>
+        <p className="text-xs text-muted-foreground">
           Only pending requests appear here; once you confirm or decline, they leave this list.
         </p>
       </div>
-      <p className="text-sm text-(--foreground)/65">
+      <p className="text-sm text-muted-foreground">
         Guest contact and address come from their{' '}
-        <Link href="/account" className="underline">
+        <Link href="/account" className="font-medium text-primary underline-offset-2 hover:underline">
           account
         </Link>
         . Email is stored when they send the request.
       </p>
       {respondError ? (
-        <p className="rounded border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-900 dark:text-red-100">
+        <p className="rounded-xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-900 dark:text-red-100">
           {respondError}
         </p>
       ) : null}
       {pending.length === 0 ? (
-        <p className="text-sm text-(--foreground)/65">No pending requests.</p>
+        <p className="text-sm text-muted-foreground">No pending requests.</p>
       ) : (
         <ul className="space-y-3">
           {pending.map((booking) => {
@@ -96,46 +96,48 @@ export function OwnerBookingRequestsSection({ bookings, onRespond }: OwnerBookin
             return (
               <li
                 key={booking.id}
-                className="rounded border border-(--foreground)/15 p-3 text-sm space-y-3"
+                className="space-y-3 rounded-xl border border-border bg-surface p-3 text-sm shadow-sm"
               >
                 <div>
-                  <p className="font-medium">{booking.listingTitle}</p>
+                  <p className="font-medium text-foreground">{booking.listingTitle}</p>
                   {booking.listingAddress?.trim() ? (
-                    <p className="mt-0.5 text-xs text-(--foreground)/60">Property: {booking.listingAddress}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      Property: {booking.listingAddress}
+                    </p>
                   ) : null}
                 </div>
 
-                <div className="rounded border border-(--foreground)/10 bg-(--foreground)/5 px-3 py-2 space-y-1.5">
-                  <p className="text-xs font-medium uppercase tracking-wide text-(--foreground)/55">
+                <div className="space-y-1.5 rounded-xl border border-border bg-muted/40 px-3 py-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     Guest
                   </p>
-                  <p className="font-medium text-(--foreground)">{booking.guestDisplayName}</p>
-                  <dl className="grid gap-1 text-xs text-(--foreground)/80 sm:grid-cols-2">
+                  <p className="font-medium text-foreground">{booking.guestDisplayName}</p>
+                  <dl className="grid gap-1 text-xs text-muted-foreground sm:grid-cols-2">
                     <div>
-                      <dt className="text-(--foreground)/55">Email</dt>
-                      <dd className="font-mono break-all">
+                      <dt className="text-muted-foreground/90">Email</dt>
+                      <dd className="break-all font-mono text-foreground">
                         {booking.guestEmail?.trim() || '—'}
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-(--foreground)/55">Phone</dt>
-                      <dd>{phone || '—'}</dd>
+                      <dt className="text-muted-foreground/90">Phone</dt>
+                      <dd className="text-foreground">{phone || '—'}</dd>
                     </div>
                     <div className="sm:col-span-2">
-                      <dt className="text-(--foreground)/55">Address (guest)</dt>
-                      <dd>{booking.guestContactAddress?.trim() || '—'}</dd>
+                      <dt className="text-muted-foreground/90">Address (guest)</dt>
+                      <dd className="text-foreground">{booking.guestContactAddress?.trim() || '—'}</dd>
                     </div>
                   </dl>
                 </div>
 
-                <p className="text-(--foreground)/75">
-                  <span className="text-(--foreground)/55">Dates: </span>
+                <p className="text-muted-foreground">
+                  <span className="text-muted-foreground/90">Dates: </span>
                   {booking.requestedStart} → {booking.requestedEnd}
                 </p>
                 {booking.message?.trim() ? (
                   <div>
-                    <p className="text-xs text-(--foreground)/55">Message from guest</p>
-                    <p className="text-(--foreground)/85">{booking.message}</p>
+                    <p className="text-xs text-muted-foreground">Message from guest</p>
+                    <p className="text-foreground">{booking.message}</p>
                   </div>
                 ) : null}
 
@@ -144,7 +146,7 @@ export function OwnerBookingRequestsSection({ bookings, onRespond }: OwnerBookin
                     <button
                       type="button"
                       disabled={busy}
-                      className="rounded bg-foreground px-3 py-1.5 text-background text-xs hover:opacity-90 disabled:opacity-50"
+                      className="rounded-xl bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:brightness-105 disabled:opacity-50"
                       onClick={() => void submitConfirm(booking.id)}
                     >
                       Confirm
@@ -152,7 +154,7 @@ export function OwnerBookingRequestsSection({ bookings, onRespond }: OwnerBookin
                     <button
                       type="button"
                       disabled={busy}
-                      className="rounded border border-(--foreground)/25 px-3 py-1.5 text-xs hover:bg-(--foreground)/10 disabled:opacity-50"
+                      className="rounded-xl border border-border px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-muted disabled:opacity-50"
                       onClick={() => openDecline(booking.id)}
                     >
                       Decline
@@ -160,7 +162,7 @@ export function OwnerBookingRequestsSection({ bookings, onRespond }: OwnerBookin
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <label className="block text-xs text-(--foreground)/70" htmlFor={`decline-${booking.id}`}>
+                    <label className="block text-xs text-muted-foreground" htmlFor={`decline-${booking.id}`}>
                       Short note to the guest (why you are declining)
                     </label>
                     <textarea
@@ -170,16 +172,16 @@ export function OwnerBookingRequestsSection({ bookings, onRespond }: OwnerBookin
                       value={declineNote}
                       onChange={(e) => setDeclineNote(e.target.value)}
                       placeholder="e.g. Those dates overlap with another booking."
-                      className="w-full rounded border border-(--foreground)/20 bg-background px-2 py-1.5 text-sm outline-none focus:border-(--foreground)/40"
+                      className="w-full rounded-xl border border-border bg-background px-2 py-1.5 text-sm text-foreground shadow-sm focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-ring"
                     />
-                    <p className="text-xs text-(--foreground)/50">
+                    <p className="text-xs text-muted-foreground">
                       {declineNote.trim().length}/{DECLINE_MAX} · required to decline
                     </p>
                     <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
                         disabled={busy || !declineNote.trim()}
-                        className="rounded bg-foreground px-3 py-1.5 text-background text-xs hover:opacity-90 disabled:opacity-50"
+                        className="rounded-xl bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:brightness-105 disabled:opacity-50"
                         onClick={() => void submitDecline(booking.id)}
                       >
                         Send decline
@@ -187,7 +189,7 @@ export function OwnerBookingRequestsSection({ bookings, onRespond }: OwnerBookin
                       <button
                         type="button"
                         disabled={busy}
-                        className="rounded border border-(--foreground)/25 px-3 py-1.5 text-xs hover:bg-(--foreground)/10 disabled:opacity-50"
+                        className="rounded-xl border border-border px-3 py-1.5 text-xs font-medium transition hover:bg-muted disabled:opacity-50"
                         onClick={cancelDecline}
                       >
                         Cancel

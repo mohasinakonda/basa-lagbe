@@ -41,10 +41,10 @@ export default function AdminUserListingsPage() {
           ← Users
         </Link>
         <h2 className="text-lg font-medium">Listings for user</h2>
-        <span className="font-mono text-xs text-(--foreground)/55">{userId}</span>
+        <span className="font-mono text-xs text-muted-foreground">{userId}</span>
       </div>
 
-      {loading && <p className="text-sm text-(--foreground)/70">Loading…</p>}
+      {loading && <p className="text-sm text-muted-foreground">Loading…</p>}
       {error && (
         <p className="text-sm text-red-600 dark:text-red-400">
           {error}{' '}
@@ -55,7 +55,7 @@ export default function AdminUserListingsPage() {
       )}
 
       {!loading && !error && listings.length === 0 && (
-        <p className="text-sm text-(--foreground)/65">No listings.</p>
+        <p className="text-sm text-muted-foreground">No listings.</p>
       )}
 
       {!loading && !error && listings.length > 0 && (
@@ -63,11 +63,11 @@ export default function AdminUserListingsPage() {
           {listings.map((l) => (
             <li
               key={l.id}
-              className="flex flex-wrap items-center justify-between gap-2 rounded border border-(--foreground)/15 px-3 py-2 text-sm"
+              className="flex flex-wrap items-center justify-between gap-2 rounded border border-border px-3 py-2 text-sm"
             >
               <div>
                 <p className="font-medium">{l.title}</p>
-                <p className="text-xs text-(--foreground)/60">
+                <p className="text-xs text-muted-foreground">
                   {l.publicationStatus ?? '—'} · {l.currency} {l.price}
                 </p>
               </div>
