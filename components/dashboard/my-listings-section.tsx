@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import React, { useState } from 'react'
 import type { Listing, ListingPublicationStatus } from '@/types/listing'
+import { Eye, EyeOff, SquarePen, Trash2 } from 'lucide-react'
 
 export type MyListingsSectionProps = {
   listings: Listing[]
@@ -57,7 +58,7 @@ export function MyListingsSection({ listings, onAfterMutation }: MyListingsSecti
           <h2 className="text-lg font-semibold text-foreground">My listings</h2>
           <Link
             href="/list-your-house"
-            className="text-sm font-medium text-primary underline-offset-2 hover:underline"
+            className="text-sm font-medium text-primary underline-offset-2 hover:underline border rounded-full px-2 py-1"
           >
             New listing
           </Link>
@@ -71,14 +72,9 @@ export function MyListingsSection({ listings, onAfterMutation }: MyListingsSecti
     <section className="space-y-3">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-foreground">My listings</h2>
-        <Link
-          href="/list-your-house"
-          className="text-sm font-medium text-primary underline-offset-2 hover:underline"
-        >
-          New listing
-        </Link>
+
       </div>
-      <div className="overflow-x-auto rounded-xl border border-border bg-surface shadow-sm">
+      <div className="overflow-x-auto rounded-md border border-border bg-surface shadow-sm">
         <table className="w-full min-w-[640px] text-left text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/50">
@@ -116,7 +112,7 @@ export function MyListingsSection({ listings, onAfterMutation }: MyListingsSecti
                     <img
                       src={thumbnailUrlForListing(listing)}
                       alt={`${listing.title} thumbnail`}
-                      className="h-12 w-16 rounded-lg border border-border object-cover"
+                      className="h-12 w-16 rounded-md border border-border object-cover"
                       width={64}
                       height={48}
                     />
@@ -140,14 +136,14 @@ export function MyListingsSection({ listings, onAfterMutation }: MyListingsSecti
                     <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-xs">
                       <Link
                         href={editHref}
-                        className="font-medium text-primary underline-offset-2 hover:underline"
+                        className="font-medium text-muted-foreground"
                       >
-                        Edit
+                        <SquarePen size={16} />
                       </Link>
                       <button
                         type="button"
                         disabled={isActionPendingForThisRow}
-                        className="font-medium text-foreground underline-offset-2 hover:underline disabled:opacity-50"
+                        className="font-medium  underline-offset-2 hover:underline disabled:opacity-50 text-muted-foreground"
                         onClick={() =>
                           updateListingPublicationStatus(
                             listing.id,
@@ -155,7 +151,7 @@ export function MyListingsSection({ listings, onAfterMutation }: MyListingsSecti
                           )
                         }
                       >
-                        {isCurrentlyPublished ? 'Unlist' : 'List'}
+                        {isCurrentlyPublished ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
                       <button
                         type="button"
@@ -163,7 +159,7 @@ export function MyListingsSection({ listings, onAfterMutation }: MyListingsSecti
                         className="font-medium text-red-600 underline-offset-2 hover:underline dark:text-red-400 disabled:opacity-50"
                         onClick={() => deleteListingById(listing.id)}
                       >
-                        Delete
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   </td>

@@ -1,7 +1,8 @@
 'use client'
 
+import { SearchIcon } from 'lucide-react'
 import Link from 'next/link'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { ChangeEvent, useCallback, useEffect, useState } from 'react'
 
 type AdminUserRow = {
   id: string
@@ -19,6 +20,7 @@ export default function AdminUsersPage() {
   const [total, setTotal] = useState(0)
   const [nextOffset, setNextOffset] = useState(0)
   const [searchInput, setSearchInput] = useState('')
+  const [timeoutFn, setTimeoutFn] = useState<NodeJS.Timeout | null>(null)
   const [activeQuery, setActiveQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -101,32 +103,37 @@ export default function AdminUsersPage() {
     if (!confirm(`Set role to ${role}?`)) return
     void patchUser(id, { role })
   }
-
+  const handleSearch = (event: ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value
+    setSearchInput(value)
+    if (timeoutFn) {
+      clearTimeout(timeoutFn)
+    }
+    const newTimeoutFn = setTimeout(() => {
+      setActiveQuery(value)
+    }, 800)
+    setTimeoutFn(newTimeoutFn)
+  }
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <form
           className="flex flex-wrap items-end gap-2"
-          onSubmit={(e) => {
-            e.preventDefault()
-            setActiveQuery(searchInput)
-          }}
+
         >
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-muted-foreground">Search name or user id</span>
+          <div className="relative min-w-0 flex-1">
+            <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input
-              name="q"
+
+              type="search"
+              placeholder="Search User"
               value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              className="rounded border border-border bg-transparent px-2 py-1.5 text-sm"
+              onChange={handleSearch}
+              className="h-10 w-full min-w-0 rounded-full border border-border bg-background pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground shadow-sm transition-shadow focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-ring"
+              autoComplete="off"
             />
-          </label>
-          <button
-            type="submit"
-            className="rounded-xl bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground transition hover:brightness-105"
-          >
-            Search
-          </button>
+          </div>
+
         </form>
         <p className="text-sm text-muted-foreground">
           {total} user{total !== 1 ? 's' : ''}

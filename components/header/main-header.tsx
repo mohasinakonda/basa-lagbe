@@ -6,47 +6,16 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from '@/components/UI/dropdown-menu'
 import { Tooltip } from '@/components/UI/tooltip'
+import { ChevronDown } from '@/assets/icons/chevron-down'
+import { PlusCircleIcon } from '@/assets/icons/plus-circle'
+import Image from 'next/image'
 
-function ChevronDown({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      aria-hidden
-    >
-      <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
-
-function PlusCircleIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      width="22"
-      height="22"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <circle cx="12" cy="12" r="10" />
-      <path d="M12 8v8M8 12h8" />
-    </svg>
-  )
-}
+import Logo from '@/assets/logo/header-logo.png'
 
 export const MainHeader = () => {
   const router = useRouter()
   const [email, setEmail] = useState<string | null>(null)
+  const [displayName, setDisplayName] = useState<string | null>(null)
   const [role, setRole] = useState<string | null>(null)
   const configured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL?.trim())
 
@@ -56,11 +25,13 @@ export const MainHeader = () => {
     const getUser = async () => {
       const user = await supabase.auth.getUser()
       setEmail(user.data.user?.email ?? null)
+      setDisplayName(user.data.user?.user_metadata?.display_name ?? null)
     }
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_e, session) => {
       setEmail(session?.user?.email ?? null)
+      setDisplayName(session?.user?.user_metadata?.display_name ?? null)
     })
     getUser()
     return () => subscription.unsubscribe()
@@ -89,9 +60,9 @@ export const MainHeader = () => {
     <header className="sticky top-0 z-30 flex h-[4.25rem] shrink-0 items-center justify-between border-b border-border bg-surface px-4 shadow-[0_1px_0_rgb(0_0_0/0.04)] md:px-8">
       <Link
         href="/"
-        className="text-lg font-semibold tracking-tight text-foreground transition-opacity hover:opacity-80"
+        className="text-lg font-semibold tracking-tight text-primary brightness-100 transition-opacity hover:opacity-80 "
       >
-        Basa Lagbe
+        <Image src={Logo} alt="Basa Lagbe" width={150} height={50} />
       </Link>
       <nav
         className="flex flex-wrap items-center justify-end gap-1.5 md:gap-2"
@@ -112,7 +83,7 @@ export const MainHeader = () => {
                 triggerClassName="inline-flex max-w-[min(100vw-8rem,220px)] items-center gap-1.5 rounded-full border border-border bg-muted/60 px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
                 trigger={
                   <>
-                    <span className="truncate">{email}</span>
+                    <span className="truncate">{displayName}</span>
                     <ChevronDown className="shrink-0 opacity-60" />
                   </>
                 }

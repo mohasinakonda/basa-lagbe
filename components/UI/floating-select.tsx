@@ -16,6 +16,7 @@ import {
   useRole,
 } from '@floating-ui/react'
 import { FilterSheetFloatingRootRefContext } from '@/components/filters/FilterSheetFloatingRootContext'
+import { ChevronDown } from '@/assets/icons/chevron-down'
 
 export type FloatingSelectOption<T extends string> = {
   value: T
@@ -35,7 +36,7 @@ const triggerBase =
   'flex min-w-[7rem] items-center justify-between gap-2 rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
 
 const listboxBase =
-  'z-[150] max-h-60 overflow-auto rounded-xl border border-border bg-surface py-1 text-foreground shadow-dialog outline-none'
+  'z-[150] max-h-60 overflow-auto rounded-xl border border-border bg-surface py-1 text-foreground shadow-dialog outline-none transition-all duration-300'
 
 export function FloatingSelect<T extends string>({
   value,
@@ -94,39 +95,38 @@ export function FloatingSelect<T extends string>({
       >
         <span>{selected?.label ?? value}</span>
         <span aria-hidden className="text-muted-foreground">
-          ▾
+          <ChevronDown className="shrink-0 opacity-60" />
         </span>
       </button>
-      {open && (
-        <FloatingPortal root={filterSheetDialogRef ?? undefined}>
-          <FloatingFocusManager context={context} modal={false} returnFocus>
-            <div
-              ref={refs.setFloating} // eslint-disable-line react-hooks/refs -- Floating UI setter
-              id={listboxId}
-              role="listbox"
-              aria-labelledby={id}
-              style={floatingStyles}
-              className={listboxBase}
-              {...getFloatingProps()}
-            >
-              {options.map((opt) => (
-                <div
-                  key={String(opt.value)}
-                  role="option"
-                  aria-selected={opt.value === value}
-                  className={`cursor-pointer px-3 py-2 text-sm text-foreground outline-none hover:bg-muted ${
-                    opt.value === value ? 'bg-muted font-medium' : ''
+      {/* {open && ( */}
+      <FloatingPortal root={filterSheetDialogRef ?? undefined}>
+        <FloatingFocusManager context={context} modal={false} returnFocus>
+          <div
+            ref={refs.setFloating} // eslint-disable-line react-hooks/refs -- Floating UI setter
+            id={listboxId}
+            role="listbox"
+            aria-labelledby={id}
+            style={floatingStyles}
+            className={`${listboxBase} ${open ? "translate-[max-height] transition-all duration-700" : "translate-[h-0] opacity-0 transition-all duration-700"}`}
+            {...getFloatingProps()}
+          >
+            {options.map((opt) => (
+              <div
+                key={String(opt.value)}
+                role="option"
+                aria-selected={opt.value === value}
+                className={`cursor-pointer px-3 py-2 text-sm text-foreground outline-none hover:bg-muted ${opt.value === value ? 'bg-muted font-medium' : ''
                   }`}
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => selectOption(opt.value)}
-                >
-                  {opt.label}
-                </div>
-              ))}
-            </div>
-          </FloatingFocusManager>
-        </FloatingPortal>
-      )}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => selectOption(opt.value)}
+              >
+                {opt.label}
+              </div>
+            ))}
+          </div>
+        </FloatingFocusManager>
+      </FloatingPortal>
+      {/* )} */}
     </div>
   )
 }

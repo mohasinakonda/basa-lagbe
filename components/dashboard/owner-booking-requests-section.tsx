@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import React, { useState } from 'react'
 import type { Booking } from '@/types/booking'
 
@@ -72,13 +71,7 @@ export function OwnerBookingRequestsSection({ bookings, onRespond }: OwnerBookin
           Only pending requests appear here; once you confirm or decline, they leave this list.
         </p>
       </div>
-      <p className="text-sm text-muted-foreground">
-        Guest contact and address come from their{' '}
-        <Link href="/account" className="font-medium text-primary underline-offset-2 hover:underline">
-          account
-        </Link>
-        . Email is stored when they send the request.
-      </p>
+
       {respondError ? (
         <p className="rounded-xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-900 dark:text-red-100">
           {respondError}

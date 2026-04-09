@@ -119,16 +119,15 @@ export default function DashboardPage() {
           <Link href="/account" className="font-medium text-foreground underline-offset-2 hover:underline">
             Account settings
           </Link>
+          <Link
+            href="/list-your-house"
+            className="text-sm font-medium text-primary underline-offset-2 hover:underline"
+          >
+            New listing
+          </Link>
         </div>
       </div>
 
-      <p className="text-sm text-muted-foreground">
-        Update your{' '}
-        <Link href="/account" className="font-medium text-primary underline-offset-2 hover:underline">
-          display name and phone
-        </Link>{' '}
-        under Account.
-      </p>
 
       <MyListingsSection listings={myListings} onAfterMutation={load} />
 
@@ -143,7 +142,7 @@ export default function DashboardPage() {
             {asGuest.map((booking) => (
               <li
                 key={booking.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-sm shadow-sm"
+                className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border bg-surface px-3 py-2 text-sm shadow-sm "
               >
                 <div className="min-w-0 flex-1">
                   <p className="font-medium text-foreground">{booking.listingTitle}</p>
