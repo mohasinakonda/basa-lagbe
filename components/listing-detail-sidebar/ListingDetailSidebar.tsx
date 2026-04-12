@@ -124,8 +124,8 @@ export function ListingDetailSidebar({
   const currentPhoto = photos[photoIndex] ?? photos[0]
   const expiresLabel = listing.expiresAt
     ? new Date(listing.expiresAt).toLocaleDateString(undefined, {
-        dateStyle: 'medium',
-      })
+      dateStyle: 'medium',
+    })
     : null
 
   const canBookRemote =

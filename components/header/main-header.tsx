@@ -8,9 +8,8 @@ import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from '@/compone
 import { Tooltip } from '@/components/UI/tooltip'
 import { ChevronDown } from '@/assets/icons/chevron-down'
 import { PlusCircleIcon } from '@/assets/icons/plus-circle'
-import Image from 'next/image'
-
-import Logo from '@/assets/logo/header-logo.png'
+import headerLogo from '@/assets/logo/header-logo.png'
+import smallLogo from '@/assets/logo/small-logo.png'
 
 export const MainHeader = () => {
   const router = useRouter()
@@ -62,15 +61,22 @@ export const MainHeader = () => {
         href="/"
         className="text-lg font-semibold tracking-tight text-primary brightness-100 transition-opacity hover:opacity-80 "
       >
-        <Image src={Logo} alt="Basa Lagbe" width={150} height={50} />
+        <picture>
+          <source media="(min-width: 768px)" srcSet={headerLogo.src} />
+          <img
+            src={smallLogo.src}
+            alt="Basa Lagbe House Rental Service"
+            className="h-8 w-auto max-h-full object-contain object-left md:h-10"
+          />
+        </picture>
       </Link>
       <nav
-        className="flex flex-wrap items-center justify-end gap-1.5 md:gap-2"
+        className="flex items-center justify-end gap-1.5 md:gap-2"
         aria-label="Main"
       >
         <Link
           href="/contact"
-          className="rounded-full px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+          className="rounded-full px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted hidden md:block"
         >
           Contact
         </Link>

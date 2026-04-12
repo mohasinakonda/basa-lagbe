@@ -107,7 +107,7 @@ type DropdownMenuItemProps = {
 }
 
 const itemClass =
-  'flex w-full cursor-pointer items-center px-3 py-2 text-left text-sm text-foreground hover:bg-muted focus:bg-muted focus:outline-none'
+  'flex w-full cursor-pointer items-center px-3 py-2 text-left text-sm text-foreground hover:bg-muted focus:bg-muted focus:outline-none rounded-md'
 
 export function DropdownMenuItem({
   href,

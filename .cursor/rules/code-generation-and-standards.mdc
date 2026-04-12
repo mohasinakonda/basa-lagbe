@@ -1,0 +1,47 @@
+---
+description: Code generation, naming, and practices for Next.js/React/TypeScript
+alwaysApply: true
+---
+
+# Code generation & quality
+
+- Change only what the task needs. No drive-by refactors, unrelated files, or “cleanup” outside scope.
+- Match surrounding code: imports (`@/` aliases), quotes, semicolons, component patterns, and comment style.
+- Prefer extending existing helpers/components over duplicating logic.
+- Avoid unnecessary `try/catch`; handle errors meaningfully or let them propagate where appropriate.
+- Do not add new markdown/docs unless the user asked for documentation.
+
+# Naming
+
+- **Components & types**: `PascalCase` (`FilterBar`, `ListingDetailSidebar`).
+- **Files**: match default export or primary symbol — `filter-bar.tsx`, `listing-detail-sidebar.tsx`.
+- **Functions, variables, props**: `camelCase` (`onSortModeChange`, `searchQuery`). do not use single character variables,arguments, parameters,etc.
+- **Constants**: `SCREAMING_SNAKE_CASE` only for true module-level constants; otherwise `camelCase` or `as const` objects.
+- **Booleans**: prefix with `is`, `has`, `can`, `should` when it aids clarity (`canSortByDistance`).
+- **Event handlers**: `onX` on props, `handleX` for internal handlers when both exist.
+- **Optimization**:
+  - Avoid unnecessary re-renders by:
+    - lifting state only when needed
+    - memoizing expensive computations when proven necessary
+  - Prefer server-rendered content to reduce client JS
+- Prefer Server Actions for mutations (create/update/delete) triggered from the UI.
+
+- use hooks for fetching data when it needs to fetch on client side, otherwise use server action.
+
+# React & Next.js
+
+- Use **functional components**. Add `'use client'` only when the file needs client APIs (hooks, browser APIs, event handlers).
+- Colocate small UI pieces in the same file; extract when reuse or clarity demands it.
+- Type **props** with `interface` or `type` and export when reused; prefer explicit prop types over `any`.
+- Keep **server/client boundaries** clear: avoid pulling server-only modules into client components.
+
+# TypeScript
+
+- Prefer **explicit types** on public APIs and non-obvious values; rely on inference for locals when clear.
+- Use `type` for unions/intersections; `interface` for object shapes especially when extending.
+- Avoid `as` assertions to silence errors; fix the underlying type.
+
+# Styling (Tailwind)
+
+- Use **utility classes** consistent with existing components; reuse patterns from `globals.css` and nearby UI.
+- Preserve accessibility: labels, `aria-*`, focus states, semantic HTML.

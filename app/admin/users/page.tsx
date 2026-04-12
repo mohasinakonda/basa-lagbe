@@ -2,7 +2,10 @@
 
 import { SearchIcon } from 'lucide-react'
 import Link from 'next/link'
-import React, { ChangeEvent, useCallback, useEffect, useState } from 'react'
+import React, { ChangeEvent, useCallback, useEffect, useRef, useState } from 'react'
+import { DayPicker } from 'react-day-picker'
+
+import 'react-day-picker/style.css'
 
 type AdminUserRow = {
   id: string
@@ -15,16 +18,37 @@ type AdminUserRow = {
   listingCreationBlockReason: string | null
 }
 
+function startOfToday(): Date {
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  return d
+}
+
+function toIsoFromDateAndTime(date: Date, timeHHMM: string): string {
+  const parts = timeHHMM.split(':').map((x) => parseInt(x, 10))
+  const h = Number.isFinite(parts[0]) ? parts[0] : 23
+  const m = Number.isFinite(parts[1]) ? parts[1] : 59
+  const d = new Date(date)
+  d.setHours(h, m, 0, 0)
+  return d.toISOString()
+}
+
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<AdminUserRow[]>([])
   const [total, setTotal] = useState(0)
   const [nextOffset, setNextOffset] = useState(0)
   const [searchInput, setSearchInput] = useState('')
-  const [timeoutFn, setTimeoutFn] = useState<NodeJS.Timeout | null>(null)
+  const [timeoutFn, setTimeoutFn] = useState<ReturnType<typeof setTimeout> | null>(null)
   const [activeQuery, setActiveQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const limit = 30
+
+  const blockDialogRef = useRef<HTMLDialogElement>(null)
+  const [blockUser, setBlockUser] = useState<AdminUserRow | null>(null)
+  const [blockSelectedDate, setBlockSelectedDate] = useState<Date | undefined>(undefined)
+  const [blockTime, setBlockTime] = useState('23:59')
+  const [blockReason, setBlockReason] = useState('')
 
   const fetchUsers = useCallback(
     async (fromOffset: number, append: boolean) => {
@@ -62,7 +86,28 @@ export default function AdminUsersPage() {
     void fetchUsers(0, false)
   }, [activeQuery, fetchUsers])
 
-  const patchUser = async (id: string, body: Record<string, unknown>) => {
+  useEffect(() => {
+    const el = blockDialogRef.current
+    if (!el) return
+    if (blockUser) {
+      if (!el.open) el.showModal()
+    } else if (el.open) {
+      el.close()
+    }
+  }, [blockUser])
+
+  useEffect(() => {
+    const el = blockDialogRef.current
+    if (!el) return
+    const onCancel = (e: Event) => {
+      e.preventDefault()
+      setBlockUser(null)
+    }
+    el.addEventListener('cancel', onCancel)
+    return () => el.removeEventListener('cancel', onCancel)
+  }, [])
+
+  const patchUser = async (id: string, body: Record<string, unknown>): Promise<boolean> => {
     const res = await fetch(`/api/admin/users/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -72,9 +117,10 @@ export default function AdminUsersPage() {
     if (!res.ok) {
       const j = (await res.json().catch(() => ({}))) as { error?: string }
       alert(j.error ?? res.statusText)
-      return
+      return false
     }
     await fetchUsers(0, false)
+    return true
   }
 
   const onClearBlock = (id: string) => {
@@ -84,19 +130,25 @@ export default function AdminUsersPage() {
     })
   }
 
-  const onSubmitBlock = (e: React.FormEvent<HTMLFormElement>) => {
+  const openBlockModal = (u: AdminUserRow) => {
+    setBlockSelectedDate(undefined)
+    setBlockTime('23:59')
+    setBlockReason('')
+    setBlockUser(u)
+  }
+
+  const onSubmitBlockModal = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const fd = new FormData(e.currentTarget)
-    const id = fd.get('userId') as string
-    const until = fd.get('until') as string
-    const reason = (fd.get('reason') as string) || null
-    if (!until) return
-    const iso = new Date(until).toISOString()
-    void patchUser(id, {
+    if (!blockUser || !blockSelectedDate) {
+      alert('Please select a date.')
+      return
+    }
+    const iso = toIsoFromDateAndTime(blockSelectedDate, blockTime)
+    const ok = await patchUser(blockUser.id, {
       listingCreationBlockedUntil: iso,
-      listingCreationBlockReason: reason,
+      listingCreationBlockReason: blockReason.trim() || null,
     })
-    e.currentTarget.reset()
+    if (ok) setBlockUser(null)
   }
 
   const onRoleChange = (id: string, role: string) => {
@@ -116,15 +168,76 @@ export default function AdminUsersPage() {
   }
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-3">
-        <form
-          className="flex flex-wrap items-end gap-2"
+      <dialog
+        ref={blockDialogRef}
+        className="fixed inset-x-4 top-1/2 z-50 m-0 max-h-[90vh] w-[calc(100%-2rem)] max-w-md -translate-y-1/2 rounded-2xl border border-border bg-surface p-0 shadow-dialog backdrop:bg-black/45 backdrop:backdrop-blur-sm mx-auto"
+        onClose={() => setBlockUser(null)}
+      >
+        {blockUser && (
+          <form onSubmit={onSubmitBlockModal} className="flex max-h-[90vh] flex-col">
+            <div className="border-b border-border px-4 py-3.5">
+              <h2 className="text-base font-semibold text-foreground">Block new listings</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                <span className="break-all">{blockUser.email ?? blockUser.id}</span>
+              </p>
+            </div>
+            <div className="overflow-y-auto px-4 py-4">
+              <p className="mb-3 text-lg text-foreground">Block until</p>
+              <div className="flex justify-center ">
+                <DayPicker
+                  mode="single"
 
-        >
+                  selected={blockSelectedDate}
+                  onSelect={setBlockSelectedDate}
+                  disabled={{ before: startOfToday() }}
+                  className="admin-block-day-picker"
+                  classNames={{
+
+                    today: 'font-semibold',
+                    day: ' text-primary-foreground',
+                    weekday: ' text-primary-foreground',
+                    month_caption: ' text-primary-foreground mb-5',
+                    chevron: 'fill-white',
+
+                  }}
+                />
+              </div>
+
+              <label className="mt-4 block text-sm font-medium text-foreground">
+                Reason <span className="font-normal text-muted-foreground">(optional)</span>
+                <textarea
+                  value={blockReason}
+                  onChange={(e) => setBlockReason(e.target.value)}
+                  rows={3}
+                  placeholder="Reason shown to moderators…"
+                  className="mt-1.5 block w-full resize-y rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground shadow-sm transition-colors focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </label>
+            </div>
+            <div className="flex flex-col gap-2 border-t border-border px-4 py-3 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                className="rounded-md border border-border px-4 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+                onClick={() => setBlockUser(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:brightness-105"
+              >
+                Confirm block
+              </button>
+            </div>
+          </form>
+        )}
+      </dialog>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <form className="flex flex-wrap items-end gap-2">
           <div className="relative min-w-0 flex-1">
             <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input
-
               type="search"
               placeholder="Search User"
               value={searchInput}
@@ -133,7 +246,6 @@ export default function AdminUsersPage() {
               autoComplete="off"
             />
           </div>
-
         </form>
         <p className="text-sm text-muted-foreground">
           {total} user{total !== 1 ? 's' : ''}
@@ -163,17 +275,17 @@ export default function AdminUsersPage() {
               </tr>
             </thead>
             <tbody>
-              {users.map((u) => (
-                <tr key={u.id} className="border-b border-border align-top">
+              {users.map((user) => (
+                <tr key={user.id} className="border-b border-border align-top">
                   <td className="p-2">
-                    <span className="break-all">{u.email ?? '—'}</span>
-                    <div className="mt-0.5 font-mono text-[10px] text-muted-foreground">{u.id}</div>
+                    <span className="break-all">{user.email ?? '—'}</span>
+                    <div className="mt-0.5 font-mono text-[10px] text-muted-foreground">{user.id}</div>
                   </td>
-                  <td className="p-2">{u.displayName ?? '—'}</td>
+                  <td className="p-2">{user.displayName ?? '—'}</td>
                   <td className="p-2">
                     <select
-                      value={u.role}
-                      onChange={(e) => onRoleChange(u.id, e.target.value)}
+                      value={user.role}
+                      onChange={(e) => onRoleChange(user.id, e.target.value)}
                       className="max-w-[120px] rounded border border-border bg-transparent px-1 py-1 text-xs"
                     >
                       <option value="user">user</option>
@@ -182,11 +294,11 @@ export default function AdminUsersPage() {
                     </select>
                   </td>
                   <td className="p-2 text-xs text-muted-foreground">
-                    {u.listingCreationBlockedUntil ? (
+                    {user.listingCreationBlockedUntil ? (
                       <>
-                        Until {new Date(u.listingCreationBlockedUntil).toLocaleString()}
-                        {u.listingCreationBlockReason && (
-                          <div className="mt-1 text-muted-foreground">{u.listingCreationBlockReason}</div>
+                        Until {new Date(user.listingCreationBlockedUntil).toLocaleString()}
+                        {user.listingCreationBlockReason && (
+                          <div className="mt-1 text-muted-foreground">{user.listingCreationBlockReason}</div>
                         )}
                       </>
                     ) : (
@@ -195,36 +307,29 @@ export default function AdminUsersPage() {
                   </td>
                   <td className="p-2 space-y-2">
                     <Link
-                      href={`/admin/users/${u.id}/listings`}
+                      href={`/admin/users/${user.id}/listings`}
                       className="mr-2 inline-block text-xs underline"
                     >
                       Listings
                     </Link>
-                    {u.listingCreationBlockedUntil && (
+                    {user.listingCreationBlockedUntil && (
                       <button
                         type="button"
                         className="text-xs underline"
-                        onClick={() => onClearBlock(u.id)}
+                        onClick={() => onClearBlock(user.id)}
                       >
                         Clear block
                       </button>
                     )}
-                    <form onSubmit={onSubmitBlock} className="mt-2 space-y-1 border-t border-border pt-2">
-                      <input type="hidden" name="userId" value={u.id} />
-                      <input
-                        type="datetime-local"
-                        name="until"
-                        className="w-full max-w-[200px] rounded border border-border bg-transparent px-1 py-1 text-xs"
-                      />
-                      <input
-                        name="reason"
-                        placeholder="Reason (optional)"
-                        className="w-full max-w-[200px] rounded border border-border bg-transparent px-1 py-1 text-xs"
-                      />
-                      <button type="submit" className="block text-xs underline">
-                        Block new listings
-                      </button>
-                    </form>
+
+                    {!user.listingCreationBlockedUntil && <button
+                      type="button"
+                      className="text-xs font-medium text-primary underline decoration-primary/40 underline-offset-2 transition hover:text-primary hover:decoration-primary"
+                      onClick={() => openBlockModal(user)}
+                    >
+                      Block this user
+                    </button>}
+
                   </td>
                 </tr>
               ))}

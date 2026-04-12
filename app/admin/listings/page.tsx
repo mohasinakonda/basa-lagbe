@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import React, { useCallback, useEffect, useState } from 'react'
 import type { Listing } from '@/types/listing'
+import { Archive, ChartLine } from 'lucide-react'
 
 type Row = {
   listing: Listing
@@ -166,19 +167,22 @@ export default function AdminListingsPage() {
                   <td className="p-2">{l.publicationStatus ?? '—'}</td>
                   <td className="p-2 tabular-nums">{impressionCount}</td>
                   <td className="p-2 space-x-2 text-xs">
-                    <Link href={`/admin/listings/${l.id}`} className="underline">
-                      Analytics
-                    </Link>
-                    {l.publicationStatus === 'published' && (
-                      <button type="button" className="underline" onClick={() => delist(l.id)}>
-                        Delist
-                      </button>
-                    )}
-                    {l.publicationStatus !== 'published' && (
-                      <button type="button" className="underline" onClick={() => publish(l.id)}>
-                        Publish
-                      </button>
-                    )}
+                    <div className='flex items-center gap-2'>
+
+                      <Link title='Analytics' href={`/admin/listings/${l.id}`} >
+                        <ChartLine size={16} />
+                      </Link>
+                      {l.publicationStatus === 'published' && (
+                        <button title='Archive' type="button" onClick={() => delist(l.id)}>
+                          <Archive size={16} />
+                        </button>
+                      )}
+                      {l.publicationStatus !== 'published' && (
+                        <button type="button" className="underline" onClick={() => publish(l.id)}>
+                          Publish
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
