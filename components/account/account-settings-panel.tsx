@@ -15,7 +15,6 @@ type ProfileRow = {
   display_name: string | null
   contact_address?: string | null
   phone_e164: string | null
-  phone_verified_at: string | null
   listing_creation_blocked_until?: string | null
   listing_creation_block_reason?: string | null
 }
@@ -26,14 +25,9 @@ export function AccountSettingsPanel() {
   const [profile, setProfile] = useState<ProfileRow | null>(null)
   const [displayName, setDisplayName] = useState('')
   const [contactAddress, setContactAddress] = useState('')
-  const [nameMsg, setNameMsg] = useState<string | null>(null)
-  const [nameBusy, setNameBusy] = useState(false)
-  const [addressMsg, setAddressMsg] = useState<string | null>(null)
-  const [addressBusy, setAddressBusy] = useState(false)
-  const [phoneInput, setPhoneInput] = useState('')
-  const [codeInput, setCodeInput] = useState('')
-  const [phoneMsg, setPhoneMsg] = useState<string | null>(null)
-  const [phoneBusy, setPhoneBusy] = useState(false)
+  const [phoneE164, setPhoneE164] = useState('')
+  const [saveMsg, setSaveMsg] = useState<string | null>(null)
+  const [saveBusy, setSaveBusy] = useState(false)
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
@@ -55,7 +49,7 @@ export function AccountSettingsPanel() {
         setProfile(p)
         setDisplayName(p?.display_name?.trim() ?? '')
         setContactAddress(p?.contact_address?.trim() ?? '')
-        if (p?.phone_e164) setPhoneInput(p.phone_e164)
+        setPhoneE164(p?.phone_e164?.trim() ?? '')
       }
     } finally {
       setLoading(false)
@@ -66,86 +60,24 @@ export function AccountSettingsPanel() {
     void load()
   }, [load])
 
-  const saveDisplayName = async () => {
-    setNameMsg(null)
-    setNameBusy(true)
+  const saveProfile = async () => {
+    setSaveMsg(null)
+    setSaveBusy(true)
     try {
       const res = await fetch('/api/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ displayName }),
+        body: JSON.stringify({ displayName, contactAddress, phoneE164 }),
       })
       const j = (await res.json().catch(() => ({}))) as { error?: string; profile?: ProfileRow }
       if (!res.ok) throw new Error(j.error ?? 'Could not save')
       if (j.profile) setProfile(j.profile)
-      setNameMsg('Saved.')
+      setSaveMsg('Saved.')
     } catch (e) {
-      setNameMsg(e instanceof Error ? e.message : 'Failed')
+      setSaveMsg(e instanceof Error ? e.message : 'Failed')
     } finally {
-      setNameBusy(false)
-    }
-  }
-
-  const saveContactAddress = async () => {
-    setAddressMsg(null)
-    setAddressBusy(true)
-    try {
-      const res = await fetch('/api/profile', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ contactAddress }),
-      })
-      const j = (await res.json().catch(() => ({}))) as { error?: string; profile?: ProfileRow }
-      if (!res.ok) throw new Error(j.error ?? 'Could not save')
-      if (j.profile) setProfile(j.profile)
-      setAddressMsg('Saved.')
-    } catch (e) {
-      setAddressMsg(e instanceof Error ? e.message : 'Failed')
-    } finally {
-      setAddressBusy(false)
-    }
-  }
-
-  const sendCode = async () => {
-    setPhoneMsg(null)
-    setPhoneBusy(true)
-    try {
-      const res = await fetch('/api/phone/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneE164: phoneInput }),
-      })
-      const j = (await res.json().catch(() => ({}))) as { error?: string }
-      if (!res.ok) throw new Error(j.error ?? 'Failed to send SMS')
-      setPhoneMsg('Check your phone for a verification code.')
-    } catch (e) {
-      setPhoneMsg(e instanceof Error ? e.message : 'Failed')
-    } finally {
-      setPhoneBusy(false)
-    }
-  }
-
-  const verifyCode = async () => {
-    setPhoneMsg(null)
-    setPhoneBusy(true)
-    try {
-      const res = await fetch('/api/phone/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ phoneE164: phoneInput, code: codeInput }),
-      })
-      const j = (await res.json().catch(() => ({}))) as { error?: string }
-      if (!res.ok) throw new Error(j.error ?? 'Verification failed')
-      setPhoneMsg('Phone verified.')
-      setCodeInput('')
-      await load()
-    } catch (e) {
-      setPhoneMsg(e instanceof Error ? e.message : 'Failed')
-    } finally {
-      setPhoneBusy(false)
+      setSaveBusy(false)
     }
   }
 
@@ -203,35 +135,24 @@ export function AccountSettingsPanel() {
       <section className="space-y-3 rounded border border-border p-4">
         <h2 className="text-lg font-medium">Sign-in email</h2>
         <p className="text-sm text-muted-foreground">
-          {email ?? '—'} (managed in your auth provider; contact support to change.)
+          {email ?? '—'}
         </p>
       </section>
 
       <section className="space-y-3 rounded border border-border p-4">
         <h2 className="text-lg font-medium">Display name</h2>
         <p className="text-sm text-muted-foreground">Shown to hosts and guests on bookings.</p>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-          <div className="flex-1">
-            <Label htmlFor="displayName">Name</Label>
-            <Input
-              id="displayName"
-              type="text"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Your name"
-              autoComplete="name"
-            />
-          </div>
-          <button
-            type="button"
-            disabled={nameBusy}
-            onClick={() => void saveDisplayName()}
-            className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:brightness-105 disabled:opacity-50"
-          >
-            Save
-          </button>
+        <div>
+          <Label htmlFor="displayName">Name</Label>
+          <Input
+            id="displayName"
+            type="text"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            placeholder="Your name"
+            autoComplete="name"
+          />
         </div>
-        {nameMsg && <p className="text-sm text-muted-foreground">{nameMsg}</p>}
       </section>
 
       <section className="space-y-3 rounded border border-border p-4">
@@ -239,87 +160,48 @@ export function AccountSettingsPanel() {
         <p className="text-sm text-muted-foreground">
           Optional. Hosts see this when you request a booking so they know how to reach you.
         </p>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-          <div className="flex-1">
-            <Label htmlFor="contactAddress">Address</Label>
-            <textarea
-              id="contactAddress"
-              rows={3}
-              value={contactAddress}
-              onChange={(e) => setContactAddress(e.target.value)}
-              placeholder="Area, city, etc."
-              className="w-full rounded border border-border bg-background px-2 py-1.5 text-sm outline-none focus:border-border"
-            />
-          </div>
-          <button
-            type="button"
-            disabled={addressBusy}
-            onClick={() => void saveContactAddress()}
-            className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:brightness-105 disabled:opacity-50"
-          >
-            Save
-          </button>
+        <div>
+          <Label htmlFor="contactAddress">Address</Label>
+          <textarea
+            id="contactAddress"
+            rows={3}
+            value={contactAddress}
+            onChange={(e) => setContactAddress(e.target.value)}
+            placeholder="Area, city, etc."
+            className="w-full rounded border border-border bg-background px-2 py-1.5 text-sm outline-none focus:border-border"
+          />
         </div>
-        {addressMsg && <p className="text-sm text-muted-foreground">{addressMsg}</p>}
       </section>
 
       <section className="space-y-3 rounded border border-border p-4">
-        <h2 className="text-lg font-medium">Phone verification</h2>
-        {profile?.phone_verified_at ? (
-          <p className="text-sm text-green-800 dark:text-green-400">
-            Verified: <span className="font-mono">{profile.phone_e164}</span>
-          </p>
-        ) : (
-          <>
-            <p className="text-sm text-muted-foreground">
-              Add your mobile number. We send a one-time code via SMS (Twilio Verify must be configured
-              on the server).
-            </p>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-              <div className="flex-1">
-                <Label htmlFor="phoneAccount">Phone (E.164, e.g. +8801XXXXXXXXX)</Label>
-                <Input
-                  id="phoneAccount"
-                  type="tel"
-                  value={phoneInput}
-                  onChange={(e) => setPhoneInput(e.target.value)}
-                  placeholder="+8801..."
-                />
-              </div>
-              <button
-                type="button"
-                disabled={phoneBusy}
-                onClick={() => void sendCode()}
-                className="rounded border border-border px-4 py-2 text-sm hover:bg-muted disabled:opacity-50"
-              >
-                Send code
-              </button>
-            </div>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-              <div className="flex-1">
-                <Label htmlFor="codeAccount">Code</Label>
-                <Input
-                  id="codeAccount"
-                  type="text"
-                  inputMode="numeric"
-                  value={codeInput}
-                  onChange={(e) => setCodeInput(e.target.value)}
-                  placeholder="123456"
-                />
-              </div>
-              <button
-                type="button"
-                disabled={phoneBusy}
-                onClick={() => void verifyCode()}
-                className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:brightness-105 disabled:opacity-50"
-              >
-                Verify
-              </button>
-            </div>
-          </>
-        )}
-        {phoneMsg && <p className="text-sm text-muted-foreground">{phoneMsg}</p>}
+        <h2 className="text-lg font-medium">Phone</h2>
+        <p className="text-sm text-muted-foreground">
+          Format (e.g. +8801XXXXXXXXX). Used for host and guest contact on bookings.
+        </p>
+        <div>
+          <Label htmlFor="accountPhone">Mobile number</Label>
+          <Input
+            id="accountPhone"
+            type="tel"
+            value={phoneE164}
+            onChange={(e) => setPhoneE164(e.target.value)}
+            placeholder="+8801..."
+            autoComplete="tel"
+          />
+        </div>
       </section>
+
+      <div className="flex flex-col gap-2 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
+        {saveMsg && <p className="text-sm text-muted-foreground">{saveMsg}</p>}
+        <button
+          type="button"
+          disabled={saveBusy}
+          onClick={() => void saveProfile()}
+          className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:brightness-105 disabled:opacity-50 sm:ml-auto"
+        >
+          {saveBusy ? 'Saving…' : 'Save'}
+        </button>
+      </div>
     </div>
   )
 }

@@ -11,8 +11,10 @@ import React, {
 import type { Listing } from '@/types/listing'
 import { MOCK_LISTINGS } from '@/lib/mock-listings'
 
-export type ListingCreateInput = Omit<Listing, 'id' | 'createdAt'> & {
+export type ListingCreateInput = Omit<Listing, 'id' | 'createdAt' | 'contact'> & {
   publicationStatus?: Listing['publicationStatus']
+  /** When omitted, the server fills contact from the signed-in user (remote mode only). */
+  contact?: Listing['contact']
 }
 
 interface ListingsContextValue {
@@ -98,7 +100,6 @@ export function ListingsProvider({ children }: { children: React.ReactNode }) {
             address: input.address,
             photos: input.photos,
             amenities: input.amenities,
-            contact: input.contact,
             status: input.publicationStatus ?? 'published',
             expiresAt: input.expiresAt,
           }),
@@ -119,6 +120,10 @@ export function ListingsProvider({ children }: { children: React.ReactNode }) {
 
       const newListing: Listing = {
         ...input,
+        contact: input.contact ?? {
+          phone: '',
+          email: 'local@example.dev',
+        },
         id: `user-${Date.now()}`,
         createdAt: new Date().toISOString(),
         publicationStatus: input.publicationStatus ?? 'published',

@@ -51,8 +51,6 @@ export default function ListYourHousePage() {
   const [areaSqFt, setAreaSqFt] = useState('')
   const [photoUrls, setPhotoUrls] = useState<string[]>([])
   const [photoUploadsPending, setPhotoUploadsPending] = useState(false)
-  const [phone, setPhone] = useState('')
-  const [email, setEmail] = useState('')
   const [amenities, setAmenities] = useState<string[]>([])
   const [expiresDate, setExpiresDate] = useState(defaultExpiryDate)
   const [publishNow, setPublishNow] = useState(true)
@@ -74,11 +72,21 @@ export default function ListYourHousePage() {
 
   useEffect(() => {
     if (!supabaseConfigured || typeof userId !== 'string') {
-      setModeration({ loading: false, blocked: false, untilIso: null, reason: null })
+      setModeration({
+        loading: false,
+        blocked: false,
+        untilIso: null,
+        reason: null,
+      })
       return
     }
     let cancelled = false
-    setModeration({ loading: true, blocked: false, untilIso: null, reason: null })
+    setModeration({
+      loading: true,
+      blocked: false,
+      untilIso: null,
+      reason: null,
+    })
     void fetch('/api/profile', { credentials: 'include' })
       .then(async (res) => {
         if (!res.ok) return
@@ -91,7 +99,12 @@ export default function ListYourHousePage() {
         const untilStr = j.profile?.listing_creation_blocked_until
         if (!untilStr) {
           if (!cancelled) {
-            setModeration({ loading: false, blocked: false, untilIso: null, reason: null })
+            setModeration({
+              loading: false,
+              blocked: false,
+              untilIso: null,
+              reason: null,
+            })
           }
           return
         }
@@ -108,7 +121,12 @@ export default function ListYourHousePage() {
       })
       .catch(() => {
         if (!cancelled) {
-          setModeration({ loading: false, blocked: false, untilIso: null, reason: null })
+          setModeration({
+            loading: false,
+            blocked: false,
+            untilIso: null,
+            reason: null,
+          })
         }
       })
     return () => {
@@ -162,7 +180,6 @@ export default function ListYourHousePage() {
         bathrooms: Number(bathrooms) || 0,
         areaSqFt: Number(areaSqFt) || 0,
         photos,
-        contact: { phone: phone.trim(), email: email.trim() },
         amenities,
         expiresAt: endOfDayIso(expiresDate),
         publicationStatus: publishNow ? 'published' : 'draft',
@@ -251,7 +268,7 @@ export default function ListYourHousePage() {
               rows={4}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm placeholder:text-muted-foreground focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm placeholder:text-muted-foreground focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Describe the property..."
             />
           </div>
@@ -340,7 +357,7 @@ export default function ListYourHousePage() {
                 required
                 value={bedrooms}
                 onChange={(e) => setBedrooms(e.target.value)}
-                className="w-full rounded border border-border bg-background px-3 py-2"
+                className="w-full rounded-md  border border-border bg-background px-3 py-2"
               >
                 <option value="" disabled>
                   Select
@@ -361,7 +378,7 @@ export default function ListYourHousePage() {
                 required
                 value={bathrooms}
                 onChange={(e) => setBathrooms(e.target.value)}
-                className="w-full rounded border border-border bg-background px-3 py-2"
+                className="w-full rounded-md border border-border bg-background px-3 py-2"
               >
                 <option value="" disabled>
                   Select
@@ -412,37 +429,6 @@ export default function ListYourHousePage() {
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <Label htmlFor="phone" required>
-                Contact phone
-              </Label>
-              <Input
-                id="phone"
-                type="tel"
-                required
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-
-                placeholder="+880 1712-345678"
-              />
-            </div>
-            <div>
-              <Label htmlFor="email" required>
-                Contact email
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-
-                placeholder="you@example.com"
-              />
-            </div>
-          </div>
-
           {submitError && (
             <p className="text-sm text-red-600" role="alert">
               {submitError}
@@ -458,13 +444,13 @@ export default function ListYourHousePage() {
                 moderation.blocked ||
                 (supabaseConfigured && !userId)
               }
-              className="rounded-xl bg-primary px-6 py-2.5 font-semibold text-primary-foreground transition hover:brightness-105 disabled:opacity-50"
+              className="rounded-md bg-primary px-6 py-2.5 font-semibold text-primary-foreground transition hover:brightness-105 disabled:opacity-50"
             >
               {submitting ? 'Saving…' : 'Submit listing'}
             </button>
             <Link
               href="/"
-              className="rounded border border-border px-6 py-2 hover:bg-muted"
+              className="rounded-md border border-border px-6 py-2 hover:bg-muted"
             >
               Cancel
             </Link>

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import React, { Suspense, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { normalizePhoneE164 } from '@/lib/phone'
 import { Input } from '@/components/UI/input'
 import { Label } from '@/components/UI/label'
 
@@ -16,6 +17,7 @@ function AuthLoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [displayName, setDisplayName] = useState('')
+  const [signupPhone, setSignupPhone] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -32,11 +34,17 @@ function AuthLoginForm() {
     try {
       const supabase = createClient()
       if (mode === 'signup') {
+        const phoneTrimmed = signupPhone.trim()
         const { error: err } = await supabase.auth.signUp({
           email: email.trim(),
           password,
           options: {
-            data: { display_name: displayName.trim() || undefined },
+            data: {
+              display_name: displayName.trim() || undefined,
+              ...(phoneTrimmed
+                ? { phone_e164: normalizePhoneE164(phoneTrimmed) }
+                : {}),
+            },
           },
         })
         if (err) throw err
@@ -77,17 +85,30 @@ function AuthLoginForm() {
 
       <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
         {mode === 'signup' && (
-          <div>
-            <Label htmlFor="displayName">Display name</Label>
-            <Input
-              id="displayName"
-              type="text"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="How should we show you to hosts?"
-              autoComplete="name"
-            />
-          </div>
+          <>
+            <div>
+              <Label htmlFor="displayName">Display name</Label>
+              <Input
+                id="displayName"
+                type="text"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder="How should we show you to hosts?"
+                autoComplete="name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="signupPhone">Phone</Label>
+              <Input
+                id="signupPhone"
+                type="tel"
+                value={signupPhone}
+                onChange={(e) => setSignupPhone(e.target.value)}
+                placeholder="Optional"
+                autoComplete="tel"
+              />
+            </div>
+          </>
         )}
         <div>
           <Label htmlFor="email" required>

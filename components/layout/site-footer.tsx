@@ -12,12 +12,7 @@ export function SiteFooter() {
           >
             Contact us
           </Link>
-          <Link
-            href="/"
-            className="text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Browse homes
-          </Link>
+
         </nav>
       </div>
     </footer>

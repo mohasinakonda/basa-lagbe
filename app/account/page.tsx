@@ -54,17 +54,13 @@ export default function AccountPage() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">Account</h1>
         <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-          <Link href="/dashboard" className="hover:underline">
+          <Link href="/dashboard" className="underline">
             Dashboard
           </Link>
-          <Link href="/" className="hover:underline">
-            ← Map
-          </Link>
+
         </div>
       </div>
-      <p className="text-sm text-muted-foreground">
-        Update how you appear on the site and verify your phone for bookings.
-      </p>
+      <p className="text-sm text-muted-foreground">Update how you appear on the site.</p>
       <AccountSettingsPanel />
     </main>
   )
