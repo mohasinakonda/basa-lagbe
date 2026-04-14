@@ -4,6 +4,8 @@ import { ensureUserProfile } from '@/lib/ensure-user-profile'
 import { isSupabaseConfigured } from '@/lib/env'
 import { normalizePhoneE164 } from '@/lib/phone'
 import { listingToInsertPayload, rowToListing, type ListingRow } from '@/lib/listing-mapper'
+import { parseHomeListingSearchParams } from '@/lib/home-listing-search-params'
+import { fetchPublishedListings } from '@/lib/listings-public-query'
 import type { ListingCategory } from '@/types/listing'
 
 export async function GET(request: Request) {
@@ -12,40 +14,16 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url)
-  const minLat = searchParams.get('minLat')
-  const maxLat = searchParams.get('maxLat')
-  const minLng = searchParams.get('minLng')
-  const maxLng = searchParams.get('maxLng')
+  const search = parseHomeListingSearchParams(searchParams)
 
-  const supabase = await createClient()
-  let q = supabase
-    .from('listings')
-    .select('*')
-    .eq('status', 'published')
-    .gt('expires_at', new Date().toISOString())
-    .order('created_at', { ascending: false })
-
-  if (minLat != null && maxLat != null && minLng != null && maxLng != null) {
-    const a = Number(minLat)
-    const b = Number(maxLat)
-    const c = Number(minLng)
-    const d = Number(maxLng)
-    if (![a, b, c, d].some((n) => Number.isNaN(n))) {
-      const loLat = Math.min(a, b)
-      const hiLat = Math.max(a, b)
-      const loLng = Math.min(c, d)
-      const hiLng = Math.max(c, d)
-      q = q.gte('lat', loLat).lte('lat', hiLat).gte('lng', loLng).lte('lng', hiLng)
-    }
+  try {
+    const supabase = await createClient()
+    const listings = await fetchPublishedListings(supabase, search)
+    return NextResponse.json({ listings })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
-
-  const { data, error } = await q
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
-  }
-
-  const listings = (data as ListingRow[]).map(rowToListing)
-  return NextResponse.json({ listings })
 }
 
 type PostBody = {
