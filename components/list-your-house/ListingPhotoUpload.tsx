@@ -104,7 +104,7 @@ export function ListingPhotoUpload({
     <div>
       <Label>Photos</Label>
       <p className="mt-1 mb-3 text-xs text-muted-foreground">
-        Drag and drop or click to add images. They upload to ImageKit; you can delete any preview
+        Drag and drop or click to add images. you can delete any preview
         before submitting.
       </p>
 

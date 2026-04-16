@@ -3,11 +3,20 @@
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api'
 import { MarkerClusterer } from '@googlemaps/markerclusterer'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { DEFAULT_MAP_CENTER } from '@/lib/home-listing-search-params'
 import type { Listing, ListingCategory } from '@/types/listing'
 
-const defaultCenter = {
-  lat: 24.744958651896532,
-  lng: 90.42272470651706,
+export interface MapViewportBounds {
+  minLat: number
+  maxLat: number
+  minLng: number
+  maxLng: number
+}
+
+function boundsKey(bounds: MapViewportBounds): string {
+  return [bounds.minLat, bounds.maxLat, bounds.minLng, bounds.maxLng]
+    .map((coordinate) => coordinate.toFixed(6))
+    .join('|')
 }
 
 const containerStyle = {
@@ -149,9 +158,18 @@ export interface MapProps {
   listings: Listing[]
   selectedListingId: string | null
   onSelectListing: (id: string | null) => void
+  /** Viewport from URL / server — map fits this on load, not the listing set. */
+  viewportBounds: MapViewportBounds
+  onViewportChange: (bounds: MapViewportBounds) => void
 }
 
-export const Map = ({ listings, selectedListingId, onSelectListing }: MapProps) => {
+export const Map = ({
+  listings,
+  selectedListingId,
+  onSelectListing,
+  viewportBounds,
+  onViewportChange,
+}: MapProps) => {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? ''
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
@@ -160,20 +178,30 @@ export const Map = ({ listings, selectedListingId, onSelectListing }: MapProps) 
   const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null)
   const clustererRef = useRef<MarkerClusterer | null>(null)
   const markersRef = useRef<google.maps.Marker[]>([])
+  const lastEmittedBoundsKeyRef = useRef<string | null>(null)
+  const idleDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const idleListenerRef = useRef<google.maps.MapsEventListener | null>(null)
 
-  const onLoad = useCallback((map: google.maps.Map) => {
-    setMapInstance(map)
-    if (listings.length === 0) {
-      map.setCenter(defaultCenter)
-      map.setZoom(15)
-      return
-    }
-    const bounds = new google.maps.LatLngBounds()
-    listings.forEach((l) => bounds.extend({ lat: l.lat, lng: l.lng }))
-    map.fitBounds(bounds)
-  }, [listings])
+  const onLoad = useCallback(
+    (map: google.maps.Map) => {
+      setMapInstance(map)
+      const bounds = new google.maps.LatLngBounds(
+        { lat: viewportBounds.minLat, lng: viewportBounds.minLng },
+        { lat: viewportBounds.maxLat, lng: viewportBounds.maxLng }
+      )
+      map.fitBounds(bounds)
+      lastEmittedBoundsKeyRef.current = boundsKey(viewportBounds)
+    },
+    [viewportBounds]
+  )
 
   const onUnmount = useCallback(() => {
+    if (idleDebounceRef.current) {
+      clearTimeout(idleDebounceRef.current)
+      idleDebounceRef.current = null
+    }
+    idleListenerRef.current?.remove()
+    idleListenerRef.current = null
     setMapInstance(null)
     clustererRef.current?.clearMarkers()
     clustererRef.current = null
@@ -183,12 +211,60 @@ export const Map = ({ listings, selectedListingId, onSelectListing }: MapProps) 
   useEffect(() => {
     if (!mapInstance || !window.google) return
 
+    const map = mapInstance
+    const onIdle = () => {
+      if (idleDebounceRef.current) clearTimeout(idleDebounceRef.current)
+      idleDebounceRef.current = setTimeout(() => {
+        const googleBounds = map.getBounds()
+        if (!googleBounds) return
+        const northEast = googleBounds.getNorthEast()
+        const southWest = googleBounds.getSouthWest()
+        const next: MapViewportBounds = {
+          minLat: southWest.lat(),
+          maxLat: northEast.lat(),
+          minLng: southWest.lng(),
+          maxLng: northEast.lng(),
+        }
+        const key = boundsKey(next)
+        if (key === lastEmittedBoundsKeyRef.current) return
+        lastEmittedBoundsKeyRef.current = key
+        onViewportChange(next)
+      }, 400)
+    }
+    idleListenerRef.current?.remove()
+    idleListenerRef.current = map.addListener('idle', onIdle)
+    return () => {
+      if (idleDebounceRef.current) {
+        clearTimeout(idleDebounceRef.current)
+        idleDebounceRef.current = null
+      }
+      idleListenerRef.current?.remove()
+      idleListenerRef.current = null
+    }
+  }, [mapInstance, onViewportChange])
+
+  /** When the URL viewport changes externally (e.g. back/forward), fit the map without relying on remount. */
+  useEffect(() => {
+    if (!mapInstance) return
+    const key = boundsKey(viewportBounds)
+    if (key === lastEmittedBoundsKeyRef.current) return
+    const bounds = new google.maps.LatLngBounds(
+      { lat: viewportBounds.minLat, lng: viewportBounds.minLng },
+      { lat: viewportBounds.maxLat, lng: viewportBounds.maxLng }
+    )
+    mapInstance.fitBounds(bounds)
+    lastEmittedBoundsKeyRef.current = key
+  }, [mapInstance, viewportBounds])
+
+  useEffect(() => {
+    if (!mapInstance || !window.google) return
+
     // Clear previous markers and clusterer
     if (clustererRef.current) {
       clustererRef.current.clearMarkers()
       clustererRef.current = null
     }
-    markersRef.current.forEach((m) => m.setMap(null))
+    markersRef.current.forEach((marker) => marker.setMap(null))
     markersRef.current = []
 
     if (listings.length === 0) return
@@ -261,7 +337,7 @@ export const Map = ({ listings, selectedListingId, onSelectListing }: MapProps) 
     <GoogleMap
       mapContainerStyle={containerStyle}
       zoom={15}
-      center={defaultCenter}
+      center={DEFAULT_MAP_CENTER}
       onLoad={onLoad}
       onUnmount={onUnmount}
       options={{

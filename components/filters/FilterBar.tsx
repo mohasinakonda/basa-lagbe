@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { HomeSearchField } from '@/components/home/home-search-field'
 import { ListingSortSelect } from '@/components/filters/ListingSortSelect'
 import { ListingFiltersForm } from '@/components/filters/ListingFiltersForm'
 import type { ListingFiltersFormProps } from '@/components/filters/ListingFiltersForm'
@@ -52,15 +53,12 @@ export function FilterBar({
             Search listings
           </label>
           <div className="relative min-w-0 flex-1">
-            <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input
+            <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 z-[1] -translate-y-1/2 text-muted-foreground" />
+            <HomeSearchField
               id="filter-search-desktop"
-              type="search"
-              placeholder="Search title, address…"
-              value={searchQuery ?? ''}
-              onChange={(e) => onSearchChange(e.target.value)}
+              initialQuery={searchQuery ?? ''}
+              onCommit={onSearchChange}
               className="h-10 w-full min-w-0 rounded-full border border-border bg-background pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground shadow-sm transition-shadow focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-ring"
-              autoComplete="off"
             />
           </div>
         </div>

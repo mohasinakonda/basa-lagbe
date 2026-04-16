@@ -95,7 +95,7 @@ export function LocationPickerMap({ value, onChange, required }: LocationPickerM
 
   if (!apiKey) {
     return (
-      <div className="flex h-64 items-center justify-center rounded-xl border border-border bg-muted/50 text-sm text-muted-foreground">
+      <div className="flex h-64 items-center justify-center rounded-md border border-border bg-muted/50 text-sm text-muted-foreground">
         Set NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to show the map.
       </div>
     )
@@ -119,7 +119,7 @@ export function LocationPickerMap({ value, onChange, required }: LocationPickerM
           type="button"
           onClick={getCurrentLocation}
           disabled={isLocating}
-          className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted disabled:opacity-50"
+          className="flex items-center gap-2 rounded-md border border-border bg-surface px-3 py-2 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted disabled:opacity-50"
         >
           {isLocating ? (
             'Getting location…'

@@ -5,6 +5,8 @@ import React, { useEffect, useRef, useState } from 'react'
 import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from '@/components/UI/dropdown-menu'
 import { useSupabaseUser } from '@/lib/hooks/use-supabase-user'
 import type { Listing } from '@/types/listing'
+import { ImageCarousel } from '../UI/image-carousel'
+import { ChevronDown, Heart, X } from 'lucide-react'
 
 export interface ListingDetailSidebarProps {
   listing: Listing | null
@@ -20,63 +22,8 @@ const categoryLabel: Record<Listing['category'], string> = {
   both: 'Family or Bachelor',
 }
 
-function IconHeart({ filled, className }: { filled?: boolean; className?: string }) {
-  if (filled) {
-    return (
-      <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-      </svg>
-    )
-  }
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-    </svg>
-  )
-}
-
-function IconX({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      aria-hidden
-    >
-      <path d="M18 6L6 18M6 6l12 12" />
-    </svg>
-  )
-}
-
-function IconChevronDown({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      aria-hidden
-    >
-      <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
-
 const fieldClass =
-  'mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-ring'
+  'mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-ring'
 
 export function ListingDetailSidebar({
   listing,
@@ -85,7 +32,6 @@ export function ListingDetailSidebar({
   isFavorite = false,
   onToggleFavorite,
 }: ListingDetailSidebarProps) {
-  const [photoIndex, setPhotoIndex] = useState(0)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
   const userId = useSupabaseUser()
   const supabaseConfigured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL?.trim())
@@ -121,7 +67,7 @@ export function ListingDetailSidebar({
   if (!listing) return null
 
   const photos = listing.photos.length > 0 ? listing.photos : ['https://picsum.photos/seed/placeholder/800/600']
-  const currentPhoto = photos[photoIndex] ?? photos[0]
+
   const expiresLabel = listing.expiresAt
     ? new Date(listing.expiresAt).toLocaleDateString(undefined, {
       dateStyle: 'medium',
@@ -183,8 +129,8 @@ export function ListingDetailSidebar({
               className="rounded-full p-2 text-primary transition-colors hover:bg-muted"
               aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
             >
-              <IconHeart
-                filled={isFavorite}
+              <Heart
+                fill={isFavorite ? 'currentColor' : 'none'}
                 className={`size-6 ${isFavorite ? 'text-primary' : 'text-muted-foreground'}`}
               />
             </button>
@@ -197,7 +143,8 @@ export function ListingDetailSidebar({
               trigger={
                 <>
                   Share
-                  <IconChevronDown className="size-4 opacity-60" />
+                  {/* <IconChevronDown className="size-4 opacity-60" /> */}
+                  <ChevronDown className="size-4 opacity-60" />
                 </>
               }
             >
@@ -220,52 +167,16 @@ export function ListingDetailSidebar({
             className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             aria-label="Close details"
           >
-            <IconX className="size-5" />
+
+            <X className="size-5" />
           </button>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        <div className="relative aspect-video w-full bg-muted">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={currentPhoto}
-            alt={`${listing.title} photo ${photoIndex + 1}`}
-            className="h-full w-full object-cover"
-          />
-          {photos.length > 1 && (
-            <>
-              <button
-                type="button"
-                className="absolute left-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/55 text-lg text-white shadow-md backdrop-blur-sm transition hover:bg-black/70"
-                onClick={() => setPhotoIndex((i) => (i === 0 ? photos.length - 1 : i - 1))}
-                aria-label="Previous photo"
-              >
-                &#x276E;
-              </button>
-              <button
-                type="button"
-                className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/55 text-lg text-white shadow-md backdrop-blur-sm transition hover:bg-black/70"
-                onClick={() => setPhotoIndex((i) => (i === photos.length - 1 ? 0 : i + 1))}
-                aria-label="Next photo"
-              >
-                &#x276F;
-              </button>
-              <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
-                {photos.map((_, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    className={`h-2 w-2 rounded-full transition-colors ${i === photoIndex ? 'bg-white' : 'bg-white/45 hover:bg-white/70'}`}
-                    onClick={() => setPhotoIndex(i)}
-                    aria-label={`Photo ${i + 1}`}
-                  />
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-
+        <ImageCarousel
+          photos={photos}
+        />
         <div className="space-y-5 p-4">
           <div className="flex flex-wrap items-baseline gap-2">
             <span className="text-2xl font-semibold tracking-tight text-foreground">
@@ -372,7 +283,7 @@ export function ListingDetailSidebar({
                   <button
                     type="submit"
                     disabled={bookingSubmitting || userId === undefined}
-                    className="rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:brightness-105 disabled:opacity-50"
+                    className="rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:brightness-105 disabled:opacity-50"
                   >
                     {bookingSubmitting ? 'Sending…' : 'Send request'}
                   </button>
@@ -409,12 +320,14 @@ export function ListingDetailSidebar({
               >
                 {listing.contact.email}
               </a>
-              <a
-                href={`tel:${listing.contact.phone.replace(/\s/g, '')}`}
-                className="mt-2 inline-flex w-fit items-center justify-center rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:brightness-105"
+              <Link
+                href={`https://www.google.com/maps/dir/?api=1&destination=${listing.lat},${listing.lng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-flex w-fit items-center justify-center rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:brightness-105"
               >
-                Request to visit
-              </a>
+                Get Directions
+              </Link>
             </div>
           </div>
         </div>

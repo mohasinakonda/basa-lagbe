@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+
 import { FloatingSelect } from '@/components/UI/floating-select'
 import type { ListingSortMode } from '@/types/filters'
 
@@ -38,9 +38,9 @@ export function ListingSortSelect({
         id={id}
         ariaLabel="Sort listings"
         value={displayValue}
-        onChange={(v) => {
-          if (v === 'distance_asc' && !canSortByDistance) return
-          onChange(v)
+        onChange={(value) => {
+          if (value === 'distance_asc' && !canSortByDistance) return
+          onChange(value)
         }}
         options={options}
       />

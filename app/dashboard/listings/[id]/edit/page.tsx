@@ -372,13 +372,10 @@ export default function EditListingPage() {
 
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <Label htmlFor="phone" required>
-              Contact phone
-            </Label>
+            <Label htmlFor="phone">Contact phone</Label>
             <Input
               id="phone"
               type="tel"
-              required
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
             />

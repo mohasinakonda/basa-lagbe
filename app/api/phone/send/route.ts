@@ -23,8 +23,8 @@ export async function POST(request: Request) {
   }
 
   const to = normalizePhoneE164(body.phoneE164 ?? '')
-  if (!to || to.length < 8) {
-    return NextResponse.json({ error: 'Invalid phone number' }, { status: 400 })
+  if (!to.trim()) {
+    return NextResponse.json({ error: 'Phone is required' }, { status: 400 })
   }
 
   const sid = process.env.TWILIO_ACCOUNT_SID!

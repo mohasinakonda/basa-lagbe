@@ -2,7 +2,10 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { ensureUserProfile } from '@/lib/ensure-user-profile'
 import { isSupabaseConfigured } from '@/lib/env'
+import { normalizePhoneE164 } from '@/lib/phone'
 import { listingToInsertPayload, rowToListing, type ListingRow } from '@/lib/listing-mapper'
+import { parseHomeListingSearchParams } from '@/lib/home-listing-search-params'
+import { fetchPublishedListings } from '@/lib/listings-public-query'
 import type { ListingCategory } from '@/types/listing'
 
 export async function GET(request: Request) {
@@ -11,40 +14,16 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url)
-  const minLat = searchParams.get('minLat')
-  const maxLat = searchParams.get('maxLat')
-  const minLng = searchParams.get('minLng')
-  const maxLng = searchParams.get('maxLng')
+  const search = parseHomeListingSearchParams(searchParams)
 
-  const supabase = await createClient()
-  let q = supabase
-    .from('listings')
-    .select('*')
-    .eq('status', 'published')
-    .gt('expires_at', new Date().toISOString())
-    .order('created_at', { ascending: false })
-
-  if (minLat != null && maxLat != null && minLng != null && maxLng != null) {
-    const a = Number(minLat)
-    const b = Number(maxLat)
-    const c = Number(minLng)
-    const d = Number(maxLng)
-    if (![a, b, c, d].some((n) => Number.isNaN(n))) {
-      const loLat = Math.min(a, b)
-      const hiLat = Math.max(a, b)
-      const loLng = Math.min(c, d)
-      const hiLng = Math.max(c, d)
-      q = q.gte('lat', loLat).lte('lat', hiLat).gte('lng', loLng).lte('lng', hiLng)
-    }
+  try {
+    const supabase = await createClient()
+    const listings = await fetchPublishedListings(supabase, search)
+    return NextResponse.json({ listings })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
-
-  const { data, error } = await q
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
-  }
-
-  const listings = (data as ListingRow[]).map(rowToListing)
-  return NextResponse.json({ listings })
 }
 
 type PostBody = {
@@ -61,7 +40,8 @@ type PostBody = {
   address: string
   photos: string[]
   amenities: string[]
-  contact: { phone: string; email: string }
+  /** Ignored; contact is taken from the authenticated user and profile. */
+  contact?: { phone: string; email: string }
   status?: 'draft' | 'published'
   expiresAt: string
 }
@@ -82,22 +62,34 @@ export async function POST(request: Request) {
 
   const { error: profileError } = await ensureUserProfile(supabase, user)
   if (profileError) {
-    return NextResponse.json({ error: profileError.message }, { status: 500 })
+    const conflict = profileError.code === '23505'
+    return NextResponse.json(
+      {
+        error: conflict
+          ? 'This phone number is already registered on another account.'
+          : profileError.message,
+      },
+      { status: conflict ? 409 : 500 }
+    )
   }
 
-  const { data: moderation, error: modError } = await supabase
+  const { data: profileRow, error: profileFetchError } = await supabase
     .from('profiles')
-    .select('listing_creation_blocked_until, listing_creation_block_reason')
+    .select('phone_e164, listing_creation_blocked_until, listing_creation_block_reason')
     .eq('id', user.id)
     .maybeSingle()
-  if (!modError && moderation?.listing_creation_blocked_until) {
-    const until = new Date(moderation.listing_creation_blocked_until as string).getTime()
+  if (profileFetchError) {
+    return NextResponse.json({ error: profileFetchError.message }, { status: 500 })
+  }
+
+  if (profileRow?.listing_creation_blocked_until) {
+    const until = new Date(profileRow.listing_creation_blocked_until as string).getTime()
     if (until > Date.now()) {
       return NextResponse.json(
         {
           error: 'You cannot create new listings until the restriction on your account ends.',
-          listingCreationBlockedUntil: moderation.listing_creation_blocked_until as string,
-          listingCreationBlockReason: (moderation.listing_creation_block_reason as string | null) ?? null,
+          listingCreationBlockedUntil: profileRow.listing_creation_blocked_until as string,
+          listingCreationBlockReason: (profileRow.listing_creation_block_reason as string | null) ?? null,
         },
         { status: 403 }
       )
@@ -116,6 +108,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
   }
 
+  const email = user.email?.trim() ?? ''
+  const meta = user.user_metadata as Record<string, unknown>
+  const phoneFromMeta =
+    typeof meta?.phone_e164 === 'string' ? normalizePhoneE164(meta.phone_e164) : ''
+  const phone = profileRow?.phone_e164?.trim() || phoneFromMeta || ''
+
+  if (!email) {
+    return NextResponse.json({ error: 'Your account has no email address.' }, { status: 400 })
+  }
+
   const payload = listingToInsertPayload({
     title: body.title.trim(),
     description: body.description?.trim() ?? '',
@@ -130,10 +132,7 @@ export async function POST(request: Request) {
     address: body.address?.trim() ?? '',
     photos: Array.isArray(body.photos) ? body.photos : [],
     amenities: Array.isArray(body.amenities) ? body.amenities : [],
-    contact: {
-      phone: body.contact?.phone?.trim() ?? '',
-      email: body.contact?.email?.trim() ?? '',
-    },
+    contact: { phone, email },
     status,
     expiresAt: body.expiresAt,
     ownerId: user.id,
