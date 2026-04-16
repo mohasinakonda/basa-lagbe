@@ -2,11 +2,27 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { distanceKm } from '@/lib/geo'
 import type { HomeListingSearch } from '@/lib/home-listing-search-params'
 import { rowToListing, type ListingRow } from '@/lib/listing-mapper'
-import type { Listing } from '@/types/listing'
+import type { Listing, ListingCategory } from '@/types/listing'
 import type { ListingSortMode } from '@/types/filters'
 
 const NEAR_ME_RADIUS_KM = 15
 const MAX_ROWS = 2000
+const MOBILE_PAGE_SIZE = 10
+
+export interface MobileListingFilters {
+  q: string
+  sort: ListingSortMode
+  category: ListingCategory | 'all'
+  priceMin?: number
+  priceMax?: number
+  bedroomsMin?: number
+  bathroomsMin?: number
+}
+
+export interface PaginatedListingsResult {
+  listings: Listing[]
+  totalCount: number
+}
 
 function sortListingsInMemory(
   rows: Listing[],
@@ -127,4 +143,61 @@ export async function fetchPublishedListings(
   rows = sortListingsInMemory(rows, sortForQuery, userLocation)
 
   return rows
+}
+
+/**
+ * Paginated listings for mobile: filters + sort applied at DB level, no bbox/radius.
+ * Uses Supabase `.range(from, to)` for cursor-free pagination.
+ */
+export async function fetchPaginatedListings(
+  supabase: SupabaseClient,
+  filters: MobileListingFilters,
+  page: number
+): Promise<PaginatedListingsResult> {
+  const from = page * MOBILE_PAGE_SIZE
+  const to = from + MOBILE_PAGE_SIZE - 1
+
+  let query = supabase
+    .from('listings')
+    .select('*', { count: 'exact' })
+    .eq('status', 'published')
+    .gt('expires_at', new Date().toISOString())
+
+  if (filters.category === 'family') {
+    query = query.in('category', ['family', 'both'])
+  } else if (filters.category === 'bachelor') {
+    query = query.in('category', ['bachelor', 'both'])
+  } else if (filters.category === 'both') {
+    query = query.eq('category', 'both')
+  }
+
+  if (filters.priceMin != null) query = query.gte('price', filters.priceMin)
+  if (filters.priceMax != null) query = query.lte('price', filters.priceMax)
+  if (filters.bedroomsMin != null) query = query.gte('bedrooms', filters.bedroomsMin)
+  if (filters.bathroomsMin != null) query = query.gte('bathrooms', filters.bathroomsMin)
+
+  const qText = filters.q.replace(/,/g, ' ').trim().slice(0, 200)
+  if (qText.length > 0) {
+    query = query.or(
+      `title.ilike.%${qText}%,address.ilike.%${qText}%,description.ilike.%${qText}%`
+    )
+  }
+
+  if (filters.sort === 'price_asc') {
+    query = query.order('price', { ascending: true })
+  } else if (filters.sort === 'price_desc') {
+    query = query.order('price', { ascending: false })
+  } else {
+    query = query.order('created_at', { ascending: false })
+  }
+
+  query = query.range(from, to)
+
+  const { data, error, count } = await query
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  const listings = (data as ListingRow[]).map(rowToListing)
+  return { listings, totalCount: count ?? 0 }
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { FilterSheetFloatingRootRefContext } from '@/components/filters/FilterSheetFloatingRootContext'
 import { ListingFiltersForm, type ListingFiltersFormProps } from '@/components/filters/ListingFiltersForm'
 
@@ -21,24 +21,24 @@ export function HomeFiltersSheet({
   const dialogRef = useRef<HTMLDialogElement>(null)
 
   useEffect(() => {
-    const el = dialogRef.current
-    if (!el) return
+    const dialogElement = dialogRef.current
+    if (!dialogElement) return
     if (open) {
-      if (!el.open) el.showModal()
+      if (!dialogElement.open) dialogElement.showModal()
     } else {
-      el.close()
+      dialogElement.close()
     }
   }, [open])
 
   useEffect(() => {
-    const el = dialogRef.current
-    if (!el) return
+    const dialogElement = dialogRef.current
+    if (!dialogElement) return
     const onCancel = (e: Event) => {
       e.preventDefault()
       onClose()
     }
-    el.addEventListener('cancel', onCancel)
-    return () => el.removeEventListener('cancel', onCancel)
+    dialogElement.addEventListener('cancel', onCancel)
+    return () => dialogElement.removeEventListener('cancel', onCancel)
   }, [onClose])
 
   return (

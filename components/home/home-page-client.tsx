@@ -15,6 +15,7 @@ import {
   patchHomeListingParams,
 } from '@/lib/home-listing-url'
 import type { ListingSortMode } from '@/types/filters'
+import type { MobileListingFilters } from '@/lib/listings-public-query'
 import type { Listing, ListingCategory } from '@/types/listing'
 
 const IMPRESSION_STORAGE_PREFIX = 'basa-lagbe-impression'
@@ -40,9 +41,16 @@ function setFavoritesStorage(ids: Set<string>) {
 export interface HomePageClientProps {
   listings: Listing[]
   search: HomeListingSearch
+  initialMobileListings: Listing[]
+  mobileTotalCount: number
 }
 
-export function HomePageClient({ listings, search }: HomePageClientProps) {
+export function HomePageClient({
+  listings,
+  search,
+  initialMobileListings,
+  mobileTotalCount,
+}: HomePageClientProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -76,7 +84,7 @@ export function HomePageClient({ listings, search }: HomePageClientProps) {
         if (cancelled || !payload?.listing || payload.listing.id !== requestedId) return
         setFetchedListing(payload.listing)
       })
-      .catch(() => {})
+      .catch(() => { })
     return () => {
       cancelled = true
     }
@@ -110,7 +118,7 @@ export function HomePageClient({ listings, search }: HomePageClientProps) {
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify({ path, referrer }),
-    }).catch(() => {})
+    }).catch(() => { })
   }, [selectedListing?.id, supabaseConfigured])
 
   const replaceParams = useCallback(
@@ -251,6 +259,19 @@ export function HomePageClient({ listings, search }: HomePageClientProps) {
 
   const listVersion = useMemo(() => searchParams.toString(), [searchParams])
 
+  const mobileFilters: MobileListingFilters = useMemo(
+    () => ({
+      q: search.q,
+      sort: search.sort,
+      category: search.category,
+      priceMin: search.priceMin,
+      priceMax: search.priceMax,
+      bedroomsMin: search.bedroomsMin,
+      bathroomsMin: search.bathroomsMin,
+    }),
+    [search.q, search.sort, search.category, search.priceMin, search.priceMax, search.bedroomsMin, search.bathroomsMin]
+  )
+
   const filterFormProps = {
     category: search.category,
     onCategoryChange: handleCategoryChange,
@@ -320,14 +341,14 @@ export function HomePageClient({ listings, search }: HomePageClientProps) {
           <ListingsList
             key={listVersion}
             className="w-full"
-            listings={listings}
+            initialListings={initialMobileListings}
+            totalCount={mobileTotalCount}
+            filters={mobileFilters}
             selectedListingId={selectedListingId}
             onSelectListing={(listingId) => handleSelectListing(listingId)}
             sortMode={search.sortRequested}
             onSortModeChange={handleSortModeChange}
             canSortByDistance={search.canSortByDistance}
-            userLocation={userLocationForList}
-            showDistance={search.canSortByDistance}
           />
         </div>
 

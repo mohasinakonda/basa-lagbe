@@ -4,7 +4,7 @@ import {
   parseHomeListingSearchParams,
   recordToURLSearchParams,
 } from '@/lib/home-listing-search-params'
-import { fetchPublishedListings } from '@/lib/listings-public-query'
+import { fetchPublishedListings, fetchPaginatedListings } from '@/lib/listings-public-query'
 import { createClient } from '@/lib/supabase/server'
 import { isSupabaseConfigured } from '@/lib/env'
 import type { Listing } from '@/types/listing'
@@ -28,13 +28,36 @@ export default async function Home({
   const params = recordToURLSearchParams(resolved)
   const search = parseHomeListingSearchParams(params)
   let listings: Listing[] = []
+  let initialMobileListings: Listing[] = []
+  let mobileTotalCount = 0
+
   if (isSupabaseConfigured()) {
     const supabase = await createClient()
-    listings = await fetchPublishedListings(supabase, search)
+    const [desktopListings, mobileResult] = await Promise.all([
+      fetchPublishedListings(supabase, search),
+      fetchPaginatedListings(supabase, {
+        q: search.q,
+        sort: search.sort,
+        category: search.category,
+        priceMin: search.priceMin,
+        priceMax: search.priceMax,
+        bedroomsMin: search.bedroomsMin,
+        bathroomsMin: search.bathroomsMin,
+      }, 0),
+    ])
+    listings = desktopListings
+    initialMobileListings = mobileResult.listings
+    mobileTotalCount = mobileResult.totalCount
   }
+
   return (
     <Suspense fallback={<HomeFallback />}>
-      <HomePageClient listings={listings} search={search} />
+      <HomePageClient
+        listings={listings}
+        search={search}
+        initialMobileListings={initialMobileListings}
+        mobileTotalCount={mobileTotalCount}
+      />
     </Suspense>
   )
 }

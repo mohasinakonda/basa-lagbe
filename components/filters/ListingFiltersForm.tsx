@@ -1,6 +1,5 @@
 'use client'
 
-import React from 'react'
 import { FloatingSelect } from '@/components/UI/floating-select'
 import { Tooltip } from '@/components/UI/tooltip'
 import type { ListingCategory } from '@/types/listing'
@@ -61,7 +60,7 @@ export function ListingFiltersForm({
   isLocating = false,
 }: ListingFiltersFormProps) {
   void userLocation
-  const p = idPrefix
+
   const outer =
     variant === 'sheet' ? 'flex flex-col gap-4' : 'flex flex-wrap items-center gap-3'
   const labelClass =
@@ -71,11 +70,10 @@ export function ListingFiltersForm({
   const fieldClass =
     'rounded-xl border border-border bg-background px-2.5 py-1.5 text-sm text-foreground shadow-sm placeholder:text-muted-foreground focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-ring'
 
-  const locBtn = (active: boolean) =>
-    `rounded-lg px-3 py-1.5 text-sm transition-colors disabled:opacity-50 ${
-      active
-        ? 'bg-surface font-medium text-foreground shadow-sm'
-        : 'text-muted-foreground hover:bg-surface/80 hover:text-foreground'
+  const locationBtn = (active: boolean) =>
+    `rounded-lg px-3 py-1.5 text-sm transition-colors disabled:opacity-50 ${active
+      ? 'bg-surface font-medium text-foreground shadow-sm'
+      : 'text-muted-foreground hover:bg-surface/80 hover:text-foreground'
     }`
 
   return (
@@ -101,7 +99,7 @@ export function ListingFiltersForm({
       <div className="flex flex-wrap items-center gap-2">
         <span className={labelClass}>Category</span>
         <FloatingSelect<ListingCategory | 'all'>
-          id={`${p}filter-category`}
+          id={`${idPrefix}filter-category`}
           ariaLabel="Filter by category"
           value={category}
           onChange={onCategoryChange}
@@ -120,7 +118,7 @@ export function ListingFiltersForm({
             <button
               type="button"
               onClick={() => onLocationFilterChange('all')}
-              className={locBtn(locationFilter === 'all')}
+              className={locationBtn(locationFilter === 'all')}
             >
               All areas
             </button>
@@ -128,7 +126,7 @@ export function ListingFiltersForm({
               type="button"
               onClick={() => onLocationFilterChange('near_me')}
               disabled={isLocating}
-              className={locBtn(locationFilter === 'near_me')}
+              className={locationBtn(locationFilter === 'near_me')}
             >
               {isLocating ? 'Getting location…' : 'Near me'}
             </button>
@@ -163,7 +161,7 @@ export function ListingFiltersForm({
         <div className="flex flex-wrap items-center gap-2">
           <span className={labelClass}>Beds</span>
           <FloatingSelect
-            id={`${p}filter-beds`}
+            id={`${idPrefix}filter-beds`}
             ariaLabel="Minimum bedrooms"
             value={bedroomsMin != null ? String(bedroomsMin) : ''}
             onChange={(v) => onBedroomsMinChange(v === '' ? undefined : Number(v))}
@@ -182,7 +180,7 @@ export function ListingFiltersForm({
         <div className="flex flex-wrap items-center gap-2">
           <span className={labelClass}>Baths</span>
           <FloatingSelect
-            id={`${p}filter-baths`}
+            id={`${idPrefix}filter-baths`}
             ariaLabel="Minimum bathrooms"
             value={bathroomsMin != null ? String(bathroomsMin) : ''}
             onChange={(v) => onBathroomsMinChange(v === '' ? undefined : Number(v))}
