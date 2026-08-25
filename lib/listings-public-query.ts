@@ -68,7 +68,7 @@ function sortListingsInMemory(
 export async function fetchPublishedListings(
   supabase: SupabaseClient,
   search: HomeListingSearch
-): Promise<Listing[]> {
+): Promise<Listing[] | undefined> {
   const loLat = Math.min(search.minLat, search.maxLat)
   const hiLat = Math.max(search.minLat, search.maxLat)
   const loLng = Math.min(search.minLng, search.maxLng)
@@ -110,39 +110,43 @@ export async function fetchPublishedListings(
   }
 
   query = query.limit(MAX_ROWS)
+  try {
+    const { data, error } = await query
+    if (error) {
+      throw new Error(error.message)
+    }
 
-  const { data, error } = await query
-  if (error) {
-    throw new Error(error.message)
+    let rows = (data as ListingRow[]).map(rowToListing)
+
+    if (qText.length > 0) {
+      const lower = qText.toLowerCase()
+      rows = rows.filter(
+        (listing) =>
+          listing.title.toLowerCase().includes(lower) ||
+          listing.address.toLowerCase().includes(lower) ||
+          listing.description.toLowerCase().includes(lower)
+      )
+    }
+
+    if (search.location === 'near_me' && search.userLat != null && search.userLng != null) {
+      const origin = { lat: search.userLat, lng: search.userLng }
+      rows = rows.filter(
+        (listing) => distanceKm(origin, { lat: listing.lat, lng: listing.lng }) <= NEAR_ME_RADIUS_KM
+      )
+    }
+
+    const userLocation =
+      search.userLat != null && search.userLng != null
+        ? { lat: search.userLat, lng: search.userLng }
+        : null
+
+    rows = sortListingsInMemory(rows, sortForQuery, userLocation)
+
+    return rows
+  } catch (e) {
+    console.log(e)
   }
 
-  let rows = (data as ListingRow[]).map(rowToListing)
-
-  if (qText.length > 0) {
-    const lower = qText.toLowerCase()
-    rows = rows.filter(
-      (listing) =>
-        listing.title.toLowerCase().includes(lower) ||
-        listing.address.toLowerCase().includes(lower) ||
-        listing.description.toLowerCase().includes(lower)
-    )
-  }
-
-  if (search.location === 'near_me' && search.userLat != null && search.userLng != null) {
-    const origin = { lat: search.userLat, lng: search.userLng }
-    rows = rows.filter(
-      (listing) => distanceKm(origin, { lat: listing.lat, lng: listing.lng }) <= NEAR_ME_RADIUS_KM
-    )
-  }
-
-  const userLocation =
-    search.userLat != null && search.userLng != null
-      ? { lat: search.userLat, lng: search.userLng }
-      : null
-
-  rows = sortListingsInMemory(rows, sortForQuery, userLocation)
-
-  return rows
 }
 
 /**
