@@ -45,7 +45,7 @@ export default async function Home({
         bathroomsMin: search.bathroomsMin,
       }, 0),
     ])
-    listings = desktopListings
+    listings = desktopListings ?? []
     initialMobileListings = mobileResult.listings
     mobileTotalCount = mobileResult.totalCount
   }
